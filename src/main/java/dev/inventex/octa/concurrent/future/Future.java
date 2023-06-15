@@ -877,6 +877,20 @@ public class Future<T> {
     }
 
     /**
+     * Create a new Future, that is completed without a specified value.
+     * @param <T> the type of the Future
+     * @return a new, completed Future
+     */
+    @NotNull
+    public static <T> Future<T> completed() {
+        // create a new empty Future
+        Future<T> future = new Future<>();
+        // set the future state
+        future.completed = true;
+        return future;
+    }
+
+    /**
      * Create a new Future, that is completed initially using the specified value.
      * @param value the completion result
      * @param <T> the type of the Future
@@ -914,12 +928,12 @@ public class Future<T> {
      * <br><br>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
-     * Therefore make sure to register the callbacks to this Future first.
+     * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
      * If the result object is not a constant, consider using {@link #completeAsync(Supplier, Executor)} instead,
      * as it does allow dynamic object creation.
      *
-     * @param result the value that is used to completed the Future with
+     * @param result the value that is used to complete the Future with
      * @param executor the executor used to complete the Future on
      * @param <T> the type of the future
      * @return a new Future
@@ -938,12 +952,12 @@ public class Future<T> {
      * <br><br>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
-     * Therefore make sure to register the callbacks to this Future first.
+     * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
-     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
-     * @param result the value that is used to completed the Future with
+     * @param result the value that is used to complete the Future with
      * @param executor the executor used to complete the Future on
      * @param <T> the type of the future
      * @return a new Future
@@ -962,12 +976,12 @@ public class Future<T> {
      * <br><br>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
-     * Therefore make sure to register the callbacks to this Future first.
+     * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
      * If the result object is not a constant, consider using {@link #completeAsync(Supplier)} instead,
      * as it does allow dynamic object creation.
      *
-     * @param result the value that is used to completed the Future with
+     * @param result the value that is used to complete the Future with
      * @param <T> the type of the future
      * @return a new Future
      */
@@ -991,12 +1005,12 @@ public class Future<T> {
      * <br><br>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
-     * Therefore make sure to register the callbacks to this Future first.
+     * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
-     * If the result object is a constant, consider using {@link #completeAsync(Object)} )} instead,
+     * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
      * as it does not require allocating a supplier.
      *
-     * @param result the value that is used to completed the Future with
+     * @param result the value that is used to complete the Future with
      * @param <T> the type of the future
      * @return a new Future
      */
@@ -1011,6 +1025,57 @@ public class Future<T> {
             future.complete(result.get());
             // execution has been finished, shutdown the executor
             executor.shutdown();
+        });
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param task the task to run to complete the future
+     * @return a new Future
+     */
+    @NotNull
+    public static Future<Void> completeAsync(@NotNull Runnable task) {
+        // create an empty future
+        Future<Void> future = new Future<>();
+        // create a new executor to run the completion on
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            task.run();
+            future.complete(null);
+        });
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param task the task to run to complete the future
+     * @param executor the executor used to complete the Future on
+     * @return a new Future
+     */
+    @NotNull
+    public static Future<Void> completeAsync(@NotNull Runnable task, @NotNull Executor executor) {
+        // create an empty future
+        Future<Void> future = new Future<>();
+        executor.execute(() -> {
+            task.run();
+            future.complete(null);
         });
         return future;
     }
