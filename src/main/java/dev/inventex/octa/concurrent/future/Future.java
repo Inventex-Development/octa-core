@@ -1,5 +1,8 @@
 package dev.inventex.octa.concurrent.future;
 
+import dev.inventex.octa.function.ThrowableFunction;
+import dev.inventex.octa.function.ThrowableRunnable;
+import dev.inventex.octa.function.ThrowableSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -416,6 +419,57 @@ public class Future<T> {
                 try {
                     future.complete(transformer.apply(value));
                 } catch (Exception e) {
+                    // unable to transform the value, fail the Future
+                    future.fail(e);
+                }
+            });
+            // register the error handler
+            errorHandlers.add(future::fail);
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will transform the value to a new Future using the given transformer.
+     * <br><br>
+     * After this Future will successfully complete, the result will be passed to the specified transformer.
+     * The output of the transformer will be the input for the new Future.
+     * <br><br>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the transformer will be called
+     * immediately, and a completed Future will be returned.
+     *
+     * @param transformer the function that transforms the value from T to U
+     * @param <U> the new Future type
+     * @return a new Future of type U
+     */
+    @NotNull
+    public <U> Future<U> tryTransform(@NotNull ThrowableFunction<T, U, Throwable> transformer) {
+        synchronized (lock) {
+            // check if the Future is already completed
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed)
+                    return failed(error);
+                // try to transform the future value
+                try {
+                    return completed(transformer.apply(value));
+                } catch (Throwable e) {
+                    // unable to transform the Future, return a failed Future
+                    return failed(e);
+                }
+            }
+            // the future hasn't been completed yet, create a new Future
+            // that will try to transform the value once it is completed
+            Future<U> future = new Future<>();
+            // register the Future completion transformer
+            completionHandlers.add(value -> {
+                // try to transform the Future value
+                try {
+                    future.complete(transformer.apply(value));
+                } catch (Throwable e) {
                     // unable to transform the value, fail the Future
                     future.fail(e);
                 }
@@ -990,6 +1044,37 @@ public class Future<T> {
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param result the value that is used to complete the Future with
+     * @param executor the executor used to complete the Future on
+     * @param <T> the type of the future
+     * @return a new Future
+     */
+    @NotNull
+    public static <T> Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result,
+                                                 @NotNull Executor executor) {
+        // create an empty future
+        Future<T> future = new Future<>();
+        // complete the future on the executor thread
+        executor.execute(() -> {
+            try {
+                future.complete(result.get());
+            } catch (Throwable e) {
+                future.fail(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed automatically on a different thread using the specified value.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
      * If the result object is not a constant, consider using {@link #completeAsync(Supplier)} instead,
      * as it does allow dynamic object creation.
      *
@@ -1050,6 +1135,39 @@ public class Future<T> {
     }
 
     /**
+     * Create a new Future, that will be completed automatically on a different thread using the specified value.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param result the value that is used to complete the Future with
+     * @param <T> the type of the future
+     * @return a new Future
+     */
+    @NotNull
+    public static <T> Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
+        // create an empty future
+        Future<T> future = new Future<>();
+        // create a new executor to run the completion on
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            // complete the future
+            try {
+                future.complete(result.get());
+            } catch (Throwable e) {
+                future.fail(e);
+            }
+            // execution has been finished, shutdown the executor
+            executor.shutdown();
+        });
+        return future;
+    }
+
+    /**
      * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
      * <br><br>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
@@ -1086,6 +1204,36 @@ public class Future<T> {
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param task the task to run to complete the future
+     * @return a new Future
+     */
+    @NotNull
+    public static Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
+        // create an empty future
+        Future<Void> future = new Future<>();
+        // create a new executor to run the completion on
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            try {
+                task.run();
+                future.complete(null);
+            } catch (Throwable e) {
+                future.fail(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
      * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
      * as it does not require allocating a supplier.
      *
@@ -1102,6 +1250,35 @@ public class Future<T> {
                 task.run();
                 future.complete(null);
             } catch (Exception e) {
+                future.fail(e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
+     * <br><br>
+     * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
+     * then some callbacks might be executed on the current thread.
+     * Therefore, make sure to register the callbacks to this Future first.
+     * <br><br>
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
+     * as it does not require allocating a supplier.
+     *
+     * @param task the task to run to complete the future
+     * @param executor the executor used to complete the Future on
+     * @return a new Future
+     */
+    @NotNull
+    public static Future<Void> completeAsync(@NotNull ThrowableRunnable<Throwable> task, @NotNull Executor executor) {
+        // create an empty future
+        Future<Void> future = new Future<>();
+        executor.execute(() -> {
+            try {
+                task.run();
+                future.complete(null);
+            } catch (Throwable e) {
                 future.fail(e);
             }
         });
