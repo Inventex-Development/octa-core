@@ -583,13 +583,13 @@ public class Future<T> {
     }
 
     /**
-     * Create a new Future that will transform the exception of the old Future to a value.
+     * Create a new Future that will transform the exception from the old Future to a value.
      * <br><br>
      * If this Future completes successfully, the new Future will be completed
      * with the same exact value.
      * <br><br>
      * If this Future fails with an exception, the transformer will be called to
-     * try to transform the exception to a fallback value. Finally the value will be the
+     * try to transform the exception to a fallback value. Finally, the value will be the
      * completion value of the new Future.
      * <br><br>
      * If the transformer's result is a constant, consider using {@link #fallback(Object)} instead,
@@ -678,7 +678,7 @@ public class Future<T> {
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
      * <br>
-     * If the Future is completed with an exception, the the result will be null, and the exception will be given.
+     * If the Future is completed with an exception, the result will be null, and the exception will be given.
      * <br><br>
      * If you wish to determine if the completion was successful, consider checking if the exception is
      * <code>null</code>, as the completion might be successful with a <code>null</code> result.
@@ -719,7 +719,7 @@ public class Future<T> {
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
      * <br>
-     * If the Future is completed with an exception, the the result will be null, and the exception will be given.
+     * If the Future is completed with an exception, the result will be null, and the exception will be given.
      * <br><br>
      * If you wish to determine if the completion was successful, consider checking if the exception is
      * <code>null</code>, as the completion might be successful with a <code>null</code> result.
@@ -1234,7 +1234,7 @@ public class Future<T> {
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
-     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
      * @param task the task to run to complete the future
@@ -1263,7 +1263,7 @@ public class Future<T> {
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
      * <br><br>
-     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} )} instead,
+     * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
      * @param task the task to run to complete the future
