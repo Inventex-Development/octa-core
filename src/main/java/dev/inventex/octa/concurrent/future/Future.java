@@ -367,8 +367,8 @@ public class Future<T> {
             // register the action if the Future hasn't been completed yet
             if (!completed)
                 completionHandlers.add(value -> executeLockedAsync(() -> action.accept(value)));
-                // the Future is already completed
-                // call the callback if the completion was successful
+            // the Future is already completed
+            // call the callback if the completion was successful
             else if (!failed)
                 executeLockedAsync(() -> action.accept(value));
             return this;
@@ -943,7 +943,13 @@ public class Future<T> {
         // create an empty future
         Future<T> future = new Future<>();
         // complete the future on the executor thread
-        executor.execute(() -> future.complete(result));
+        executor.execute(() -> {
+            try {
+                future.complete(result);
+            } catch (Exception e) {
+                future.fail(e);
+            }
+        });
         return future;
     }
 
@@ -967,7 +973,13 @@ public class Future<T> {
         // create an empty future
         Future<T> future = new Future<>();
         // complete the future on the executor thread
-        executor.execute(() -> future.complete(result.get()));
+        executor.execute(() -> {
+            try {
+                future.complete(result.get());
+            } catch (Exception e) {
+                future.fail(e);
+            }
+        });
         return future;
     }
 
@@ -993,7 +1005,11 @@ public class Future<T> {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             // complete the future
-            future.complete(result);
+            try {
+                future.complete(result);
+            } catch (Exception e) {
+                future.fail(e);
+            }
             // execution has been finished, shutdown the executor
             executor.shutdown();
         });
@@ -1022,7 +1038,11 @@ public class Future<T> {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             // complete the future
-            future.complete(result.get());
+            try {
+                future.complete(result.get());
+            } catch (Exception e) {
+                future.fail(e);
+            }
             // execution has been finished, shutdown the executor
             executor.shutdown();
         });
@@ -1049,8 +1069,12 @@ public class Future<T> {
         // create a new executor to run the completion on
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            task.run();
-            future.complete(null);
+            try {
+                task.run();
+                future.complete(null);
+            } catch (Exception e) {
+                future.fail(e);
+            }
         });
         return future;
     }
@@ -1074,8 +1098,12 @@ public class Future<T> {
         // create an empty future
         Future<Void> future = new Future<>();
         executor.execute(() -> {
-            task.run();
-            future.complete(null);
+            try {
+                task.run();
+                future.complete(null);
+            } catch (Exception e) {
+                future.fail(e);
+            }
         });
         return future;
     }
