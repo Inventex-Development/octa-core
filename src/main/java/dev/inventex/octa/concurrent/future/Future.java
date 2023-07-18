@@ -1,5 +1,6 @@
 package dev.inventex.octa.concurrent.future;
 
+import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
 import dev.inventex.octa.function.ThrowableSupplier;
@@ -352,6 +353,44 @@ public class Future<T> {
     }
 
     /**
+     * Register a completion handler to be called when the Future completes without an error.
+     * <br><br>
+     * If the Future completes with an exception, the specified <code>action</code> will not be called.
+     * If you wish to handle exceptions as well,
+     * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
+     * <br><br>
+     * If the Future is already completed successfully, the action will be called immediately with
+     * the completion value. If the Future failed with an exception, the action will not be called.
+     *
+     * @param action the successful completion callback
+     * @return this Future
+     */
+    @NotNull
+    public Future<T> tryThen(@NotNull ThrowableConsumer<T, Throwable> action) {
+        synchronized (lock) {
+            // register the action if the Future hasn't been completed yet
+            if (!completed)
+                completionHandlers.add(value -> {
+                    try {
+                        action.accept(value);
+                    } catch (Throwable e) {
+                        fail(e);
+                    }
+                });
+                // the Future is already completed
+                // call the callback if the completion was successful
+            else if (!failed) {
+                try {
+                    action.accept(value);
+                } catch (Throwable e) {
+                    fail(e);
+                }
+            }
+            return this;
+        }
+    }
+
+    /**
      * Register an asynchronous completion handler to be called when the Future completes without an error.
      * <br><br>
      * If the Future completes with an exception, the specified <code>action</code> will not be called.
@@ -551,6 +590,44 @@ public class Future<T> {
                 // call the callback if the completion was unsuccessful
             else if (failed)
                 action.accept(error);
+            return this;
+        }
+    }
+
+    /**
+     * Register a failure handler to be called when the Future completes with an error.
+     * <br><br>
+     * If the Future completes successfully, the specified <code>action</code> will not be called.
+     * If you wish to handle successful completions as well,
+     * use {@link #result(BiConsumer)} or {@link #then(Consumer)} methods.
+     * <br><br>
+     * If the Future is already completed unsuccessfully, the action will be called immediately with
+     * the completion error. If the Future has completed with a result, the action will not be called.
+     *
+     * @param action the failed completion handler
+     * @return this Future
+     */
+    @NotNull
+    public Future<T> tryExcept(@NotNull ThrowableConsumer<Throwable, Throwable> action) {
+        synchronized (lock) {
+            // register the action if the Future hasn't been completed yet
+            if (!completed)
+                errorHandlers.add(error -> {
+                    try {
+                        action.accept(error);
+                    } catch (Throwable ignored) {
+                        // future is already failed, do not fail again
+                    }
+                });
+            // the Future is already completed
+            // call the callback if the completion was unsuccessful
+            else if (failed) {
+                try {
+                    action.accept(error);
+                } catch (Throwable ignored) {
+                    // future is already failed, do not fail again
+                }
+            }
             return this;
         }
     }
