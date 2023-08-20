@@ -553,13 +553,7 @@ public class Future<T> {
             Future<Void> future = new Future<>();
             // register the Future completion transformer
             completionHandlers.add(value -> {
-                // try to transform the Future value
-                try {
-                    future.complete(null);
-                } catch (Exception e) {
-                    // unable to transform the value, fail the Future
-                    future.fail(e);
-                }
+                future.complete(null);
             });
             // register the error handler
             errorHandlers.add(future::fail);
@@ -851,6 +845,33 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future, that will fail if the predicate fails for a value of a completion.
+     * @param predicate the function to test the completion value
+     * @return a new future that will fail if the predicate fails
+     */
+    public Future<T> failIf(Predicate<T> predicate) {
+        synchronized (lock) {
+            // check if the future is already completed
+            if (completed) {
+                // fail the future it was already failed or if the predicate did not pass
+                if (failed || !predicate.test(value))
+                    return failed(error);
+                return completed(value);
+            }
+            // create a future that will fail if the predicate fails the completion value
+            Future<T> future = new Future<>();
+            completionHandlers.add(value -> {
+                if (predicate.test(value))
+                    future.complete(value);
+                else
+                    future.fail(new FutureExecutionException("Predicate failed for value `" + value + "`"));
+            });
+            errorHandlers.add(future::fail);
             return future;
         }
     }
