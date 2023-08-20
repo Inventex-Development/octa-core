@@ -854,7 +854,7 @@ public class Future<T> {
      * @param predicate the function to test the completion value
      * @return a new future that will fail if the predicate fails
      */
-    public Future<T> failIf(Predicate<T> predicate) {
+    public Future<T> filter(Predicate<T> predicate) {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
@@ -872,6 +872,83 @@ public class Future<T> {
                     future.fail(new FutureExecutionException("Predicate failed for value `" + value + "`"));
             });
             errorHandlers.add(future::fail);
+            return future;
+        }
+    }
+
+    /* Fail the future if the specified predicate outputs an error.
+     * This is useful when trying to fail a future, if the completion value turned out
+     * to be something else than expected.
+     * <br>
+     * If you would like to handle errors as well, use {@link #failIf(BiFunction)} instead.
+     *
+     * @param predicate the function that returns an error if the future should be failed
+     * @return a new Future
+     */
+    @NotNull
+    public Future<T> failIf(Function<T, @Nullable Throwable> predicate) {
+        synchronized (lock) {
+            // check if the future is already completed
+            if (completed) {
+                // check if the future is already failed
+                if (failed)
+                    return failed(error);
+                // run the predicate and test if the future should fail
+                Throwable error = predicate.apply(value);
+                if (error != null)
+                    return failed(error);
+                // future passed the predicate, return the completion value
+                return completed(value);
+            }
+            Future<T> future = new Future<>();
+            // the future isn't completed yet
+            completionHandlers.add(value -> {
+                // run the predicate and test if the future should fail
+                Throwable error = predicate.apply(value);
+                if (error != null)
+                    future.fail(error);
+                // future passed the predicate, complete with the value
+                future.complete(value);
+            });
+            return future;
+        }
+    }
+
+    /**
+     * Fail the future if the specified predicate outputs an error.
+     * This is useful when trying to fail a future, if the completion value turned out
+     * to be something else than expected.
+     * <br>
+     * If you would like to handle the completion value only, use {@link #failIf(Function)} instead.
+     *
+     * @param predicate the function that returns an error if the future should be failed
+     * @return a new Future
+     */
+    @NotNull
+    public Future<T> failIf(BiFunction<T, Throwable, @Nullable Throwable> predicate) {
+        synchronized (lock) {
+            // check if the future is already completed
+            if (completed) {
+                // check if the future is already failed
+                if (failed)
+                    return failed(error);
+                // run the predicate and test if the future should fail
+                Throwable error = predicate.apply(value, this.error);
+                if (error != null)
+                    return failed(error);
+                // future passed the predicate, return the completion value
+                return completed(value);
+            }
+            Future<T> future = new Future<>();
+            // the future isn't completed yet
+            completionHandlers.add(value -> {
+                // run the predicate and test if the future should fail
+                Throwable error = predicate.apply(value, this.error);
+                if (error != null)
+                    future.fail(error);
+                // future passed the predicate, complete with the value
+                future.complete(value);
+            });
             return future;
         }
     }
