@@ -267,40 +267,6 @@ public class Future<T> {
     }
 
     /**
-     * Try to complete the Future successfully with the value given.
-     * Call all the callbacks waiting on the completion of this Future.
-     * <br><br>
-     * If this Future was already completed (either successful or unsuccessful), this method does nothing.
-     * <br><br>
-     * If the supplier throws an exception, the Future will be completed with the exception.
-     *
-     * @param supplier the completion value supplier
-     * @return <code>true</code> if the Future was completed with the value,
-     * <code>false</code> otherwise
-     */
-    private boolean tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
-        // check if the future is already completed
-        if (completed)
-            return false;
-        // set the completion value and unlock the waiting thread
-        synchronized (lock) {
-            try {
-                this.value = supplier.get();
-            } catch (Throwable e) {
-                this.error = e;
-                failed = true;
-                return false;
-            } finally {
-                completed = true;
-                lock.notify();
-            }
-        }
-        // call the completion handlers
-        handleCompleted(value);
-        return true;
-    }
-
-    /**
      * Try to call the completion handlers.
      * @param value the completion value
      */
@@ -1491,6 +1457,29 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+        return future;
+    }
+
+
+    /**
+     * Try to complete the Future successfully with the value given.
+     * Call all the callbacks waiting on the completion of this Future.
+     * <br><br>
+     * If this Future was already completed (either successful or unsuccessful), this method does nothing.
+     * <br><br>
+     * If the supplier throws an exception, the Future will be completed with the exception.
+     *
+     * @param supplier the completion value supplier
+     * @return <code>true</code> if the Future was completed with the value,
+     * <code>false</code> otherwise
+     */
+    private static <T> Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
+        Future<T> future = new Future<>();
+        try {
+            future.complete(supplier.get());
+        } catch (Throwable e) {
+            future.fail(e);
+        }
         return future;
     }
 }
