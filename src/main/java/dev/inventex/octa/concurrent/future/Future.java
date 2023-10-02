@@ -1473,7 +1473,7 @@ public class Future<T> {
      * @return <code>true</code> if the Future was completed with the value,
      * <code>false</code> otherwise
      */
-    private static <T> Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
+    public static <T> Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
         Future<T> future = new Future<>();
         try {
             future.complete(supplier.get());
