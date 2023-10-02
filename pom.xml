@@ -15,8 +15,8 @@
 
     <distributionManagement>
         <repository>
-            <id>dev.inventex.octa</id>
-            <name>Octa</name>
+            <id>github</id>
+            <name>Octa Core Maven Packages</name>
             <url>https://github.com/Inventex-Development/OctaCore</url>
         </repository>
     </distributionManagement>
