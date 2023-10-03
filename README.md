@@ -1,7 +1,9 @@
 # OctaCore
 A general purpose utility framework for java projects
 
-## Installation
+# Installation
+
+## Maven
 ```xml
 <repositories>
     <repository>
@@ -19,4 +21,20 @@ A general purpose utility framework for java projects
         <version>1.0.6</version>
     </dependency>
 </dependencies>
+```
+
+## Gradle
+```gradle
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+```gradle
+dependencies {
+    implementation 'com.github.Inventex-Development:OctaCore:Tag'
+}
 ```
