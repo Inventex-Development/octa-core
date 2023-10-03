@@ -3,17 +3,20 @@ A general purpose utility framework for java projects
 
 ## Installation
 ```xml
-<repository>
-  <id>github</id>
-  <name>GitHub OWNER's Maven Packages</name>
-  <url>https://maven.pkg.github.com/Inventex-Development/OctaCore</url>
-</repository>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
 ```
 
 ```xml
-<dependency>
-  <groupId>dev.inventex.octa</groupId>
-  <artifactId>octa</artifactId>
-  <version>1.0.5</version>
-</dependency>
+  <dependencies>
+      <dependency>
+          <groupId>com.github.Inventex-Development</groupId>
+          <artifactId>OctaCore</artifactId>
+          <version>1.0.6</version>
+      </dependency>
+  </dependencies>
 ```
