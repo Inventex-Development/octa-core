@@ -15,20 +15,12 @@
     </properties>
 
     <distributionManagement>
-        <!--
-        <repository>
-            <id>jitpack.io</id>
-            <name>Jitpack Packages</name>
-            <url>https://jitpack.io</url>
-        </repository>
-        -->
         <repository>
             <id>github</id>
             <name>Github Packages</name>
             <url>https://maven.pkg.github.com/Inventex-Development/OctaCore</url>
         </repository>
     </distributionManagement>
-
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.jetbrains/annotations -->
