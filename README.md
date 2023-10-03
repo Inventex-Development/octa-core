@@ -12,11 +12,11 @@ A general purpose utility framework for java projects
 ```
 
 ```xml
-  <dependencies>
-      <dependency>
-          <groupId>com.github.Inventex-Development</groupId>
-          <artifactId>OctaCore</artifactId>
-          <version>1.0.6</version>
-      </dependency>
-  </dependencies>
+<dependencies>
+    <dependency>
+        <groupId>com.github.Inventex-Development</groupId>
+        <artifactId>OctaCore</artifactId>
+        <version>1.0.6</version>
+    </dependency>
+</dependencies>
 ```
