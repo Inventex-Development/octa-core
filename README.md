@@ -18,7 +18,7 @@ A general purpose utility framework for java projects
     <dependency>
         <groupId>com.github.Inventex-Development</groupId>
         <artifactId>OctaCore</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7/version>
     </dependency>
 </dependencies>
 ```
@@ -35,6 +35,6 @@ allprojects {
 
 ```gradle
 dependencies {
-    implementation 'com.github.Inventex-Development:OctaCore:Tag'
+    implementation 'com.github.Inventex-Development:OctaCore:1.0.7'
 }
 ```
