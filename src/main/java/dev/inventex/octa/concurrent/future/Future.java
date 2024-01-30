@@ -359,8 +359,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
-    @NotNull
-    public Future<T> then(@NotNull Consumer<T> action) {
+    public @NotNull Future<T> then(@NotNull Consumer<T> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -386,8 +385,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
-    @NotNull
-    public Future<T> tryThen(@NotNull ThrowableConsumer<T, Throwable> action) {
+    public @NotNull Future<T> tryThen(@NotNull ThrowableConsumer<T, Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -424,8 +422,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
-    @NotNull
-    public Future<T> thenAsync(@NotNull Consumer<T> action) {
+    public @NotNull Future<T> thenAsync(@NotNull Consumer<T> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -454,8 +451,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
-    @NotNull
-    public <U> Future<U> transform(@NotNull Function<T, U> transformer) {
+    public <U> @NotNull Future<U> transform(@NotNull Function<T, U> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -505,8 +501,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
-    @NotNull
-    public <U> Future<U> tryTransform(@NotNull ThrowableFunction<T, U, Throwable> transformer) {
+    public <U> @NotNull Future<U> tryTransform(@NotNull ThrowableFunction<T, U, Throwable> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -557,7 +552,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
-    public <U> Future<U> transformAsync(@NotNull Function<T, Future<U>> transformer) {
+    public <U> @NotNull Future<U> transformAsync(@NotNull Function<T, Future<U>> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -608,7 +603,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
-    public <U> Future<U> tryTransformAsync(@NotNull ThrowableFunction<T, Future<U>, Throwable> transformer) {
+    public <U> @NotNull Future<U> tryTransformAsync(@NotNull ThrowableFunction<T, Future<U>, Throwable> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -653,7 +648,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> Future<U> to(U value) {
+    public <U> @NotNull Future<U> to(U value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -682,7 +677,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> Future<U> to(Supplier<U> value) {
+    public <U> @NotNull Future<U> to(Supplier<U> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -711,7 +706,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> Future<U> tryTo(ThrowableSupplier<U, Throwable> value) {
+    public <U> @NotNull Future<U> tryTo(ThrowableSupplier<U, Throwable> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -744,7 +739,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> Future<U> toAsync(Supplier<U> value) {
+    public <U> @NotNull Future<U> toAsync(Supplier<U> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -773,7 +768,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> Future<U> tryToAsync(ThrowableSupplier<U, Throwable> value) {
+    public <U> @NotNull Future<U> tryToAsync(ThrowableSupplier<U, Throwable> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -803,8 +798,7 @@ public class Future<T> {
      *
      * @return a new Future of Void type
      */
-    @NotNull
-    public Future<Void> callback() {
+    public @NotNull Future<Void> callback() {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -845,8 +839,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
-    @NotNull
-    public Future<T> except(@NotNull Consumer<Throwable> action) {
+    public @NotNull Future<T> except(@NotNull Consumer<Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -872,8 +865,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
-    @NotNull
-    public Future<T> tryExcept(@NotNull ThrowableConsumer<Throwable, Throwable> action) {
+    public @NotNull Future<T> tryExcept(@NotNull ThrowableConsumer<Throwable, Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -910,8 +902,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
-    @NotNull
-    public Future<T> exceptAsync(@NotNull Consumer<Throwable> action) {
+    public @NotNull Future<T> exceptAsync(@NotNull Consumer<Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
             if (!completed)
@@ -940,8 +931,7 @@ public class Future<T> {
      * @param transformer the function that transforms the error to T
      * @return a new Future
      */
-    @NotNull
-    public Future<T> fallback(@NotNull Function<Throwable, T> transformer) {
+    public @NotNull Future<T> fallback(@NotNull Function<Throwable, T> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -991,8 +981,7 @@ public class Future<T> {
      * @param fallbackValue the value used if an exception occurs
      * @return a new Future
      */
-    @NotNull
-    public Future<T> fallback(@Nullable T fallbackValue) {
+    public @NotNull Future<T> fallback(@Nullable T fallbackValue) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -1039,8 +1028,7 @@ public class Future<T> {
      * @param action the completion value and error handler
      * @return this Future
      */
-    @NotNull
-    public Future<T> result(@NotNull BiConsumer<T, Throwable> action) {
+    public @NotNull Future<T> result(@NotNull BiConsumer<T, Throwable> action) {
         synchronized (lock) {
             // call the action if the Future is already completed
             if (completed) {
@@ -1081,8 +1069,7 @@ public class Future<T> {
      * @param transformer the Future value transformer
      * @return a new Future of type U
      */
-    @NotNull
-    public <U> Future<U> result(@NotNull BiFunction<T, Throwable, U> transformer) {
+    public <U> @NotNull Future<U> result(@NotNull BiFunction<T, Throwable, U> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
             if (completed) {
@@ -1125,7 +1112,7 @@ public class Future<T> {
      * @param predicate the function to test the completion value
      * @return a new future that will fail if the predicate fails
      */
-    public Future<T> filter(Predicate<T> predicate) {
+    public @NotNull Future<T> filter(Predicate<T> predicate) {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
@@ -1156,8 +1143,7 @@ public class Future<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
-    @NotNull
-    public Future<T> failIf(Function<T, @Nullable Throwable> predicate) {
+    public @NotNull Future<T> failIf(Function<T, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
@@ -1195,8 +1181,7 @@ public class Future<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
-    @NotNull
-    public Future<T> failIf(BiFunction<T, Throwable, @Nullable Throwable> predicate) {
+    public @NotNull Future<T> failIf(BiFunction<T, Throwable, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
@@ -1234,8 +1219,7 @@ public class Future<T> {
      * @param timeout the time to wait (in milliseconds) until a {@link FutureTimeoutException} is thrown.
      * @return a new Future
      */
-    @NotNull
-    public Future<T> timeout(long timeout) {
+    public @NotNull Future<T> timeout(long timeout) {
         synchronized (lock) {
             // create a new Future to send the timeout result to
             Future<T> future = new Future<>();
@@ -1286,8 +1270,7 @@ public class Future<T> {
      * @param unit the type of the timeout (milliseconds, seconds, etc)
      * @return a new Future
      */
-    @NotNull
-    public Future<T> timeout(long timeout, @NotNull TimeUnit unit) {
+    public @NotNull Future<T> timeout(long timeout, @NotNull TimeUnit unit) {
         return timeout(TimeUnit.MILLISECONDS.convert(timeout, unit));
     }
 
@@ -1295,8 +1278,7 @@ public class Future<T> {
      * Create a new Future which acts the same way this Future does.
      * @return a new Future
      */
-    @NotNull
-    public Future<T> mock() {
+    public @NotNull Future<T> mock() {
         synchronized (lock) {
             // create a new Future
             Future<T> future = new Future<>();
@@ -1344,6 +1326,7 @@ public class Future<T> {
 
     /**
      * Perform a task whilst the value is locked.
+     *
      * @param task the task to perform
      */
     private void executeLockedAsync(@NotNull Runnable task) {
@@ -1362,12 +1345,12 @@ public class Future<T> {
 
     /**
      * Create a new Future, that is completed initially using the specified value.
+     *
      * @param value the completion result
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
-    @NotNull
-    public static <T> Future<T> completed(@Nullable T value) {
+    public static <T> @NotNull Future<T> completed(@Nullable T value) {
         // create a new empty Future
         Future<T> future = new Future<>();
         // set the future state
@@ -1378,11 +1361,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that is completed without a specified value.
+     *
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
-    @NotNull
-    public static <T> Future<T> completed() {
+    public static <T> @NotNull Future<T> completed() {
         // create a new empty Future
         Future<T> future = new Future<>();
         // set the future state
@@ -1392,12 +1375,12 @@ public class Future<T> {
 
     /**
      * Create a new Future, that is completed initially using the specified value.
+     *
      * @param value the completion result
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
-    @NotNull
-    public static <T> Future<T> completed(@NotNull Supplier<T> value) {
+    public static <T> @NotNull Future<T> completed(@NotNull Supplier<T> value) {
         // create a new empty Future
         Future<T> future = new Future<>();
         // set the future state
@@ -1408,12 +1391,12 @@ public class Future<T> {
 
     /**
      * Create a new Future, that is failed initially using the specified error.
+     *
      * @param error the completion error
      * @param <T> the type of the Future
      * @return a new, failed Future
      */
-    @NotNull
-    public static <T> Future<T> failed(@NotNull Throwable error) {
+    public static <T> @NotNull Future<T> failed(@NotNull Throwable error) {
         // create a new empty Future
         Future<T> future = new Future<>();
         // set the future state
@@ -1438,8 +1421,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> completeAsync(@Nullable T result, @NotNull Executor executor) {
+    public static <T> @NotNull Future<T> completeAsync(@Nullable T result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
         // complete the future on the executor thread
@@ -1468,8 +1450,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> completeAsync(@NotNull Supplier<T> result, @NotNull Executor executor) {
+    public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
         // complete the future on the executor thread
@@ -1498,9 +1479,9 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result,
-                                                 @NotNull Executor executor) {
+    public static <T> @NotNull Future<T> tryCompleteAsync(
+        @NotNull ThrowableSupplier<T, Throwable> result, @NotNull Executor executor
+    ) {
         // create an empty future
         Future<T> future = new Future<>();
         // complete the future on the executor thread
@@ -1528,8 +1509,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> completeAsync(@Nullable T result) {
+    public static <T> @NotNull Future<T> completeAsync(@Nullable T result) {
         // create an empty future
         Future<T> future = new Future<>();
         // create a new executor to run the completion on
@@ -1561,8 +1541,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> completeAsync(@NotNull Supplier<T> result) {
+    public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result) {
         // create an empty future
         Future<T> future = new Future<>();
         // create a new executor to run the completion on
@@ -1594,8 +1573,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
-    @NotNull
-    public static <T> Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
+    public static <T> @NotNull Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
         // create an empty future
         Future<T> future = new Future<>();
         // create a new executor to run the completion on
@@ -1626,8 +1604,7 @@ public class Future<T> {
      * @param task the task to run to complete the future
      * @return a new Future
      */
-    @NotNull
-    public static Future<Void> completeAsync(@NotNull Runnable task) {
+    public static @NotNull Future<Void> completeAsync(@NotNull Runnable task) {
         // create an empty future
         Future<Void> future = new Future<>();
         // create a new executor to run the completion on
@@ -1656,8 +1633,7 @@ public class Future<T> {
      * @param task the task to run to complete the future
      * @return a new Future
      */
-    @NotNull
-    public static Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
+    public static @NotNull Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
         // create an empty future
         Future<Void> future = new Future<>();
         // create a new executor to run the completion on
@@ -1687,8 +1663,7 @@ public class Future<T> {
      * @param executor the executor used to complete the Future on
      * @return a new Future
      */
-    @NotNull
-    public static Future<Void> completeAsync(@NotNull Runnable task, @NotNull Executor executor) {
+    public static @NotNull Future<Void> completeAsync(@NotNull Runnable task, @NotNull Executor executor) {
         // create an empty future
         Future<Void> future = new Future<>();
         executor.execute(() -> {
@@ -1716,8 +1691,9 @@ public class Future<T> {
      * @param executor the executor used to complete the Future on
      * @return a new Future
      */
-    @NotNull
-    public static Future<Void> completeAsync(@NotNull ThrowableRunnable<Throwable> task, @NotNull Executor executor) {
+    public static @NotNull Future<Void> completeAsync(
+        @NotNull ThrowableRunnable<Throwable> task, @NotNull Executor executor
+    ) {
         // create an empty future
         Future<Void> future = new Future<>();
         executor.execute(() -> {
@@ -1731,7 +1707,6 @@ public class Future<T> {
         return future;
     }
 
-
     /**
      * Try to complete the Future successfully with the value given.
      * Call all the callbacks waiting on the completion of this Future.
@@ -1744,7 +1719,7 @@ public class Future<T> {
      * @return <code>true</code> if the Future was completed with the value,
      * <code>false</code> otherwise
      */
-    public static <T> Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
+    public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
         Future<T> future = new Future<>();
         try {
             future.complete(supplier.get());
