@@ -1711,18 +1711,37 @@ public class Future<T> {
      * Try to complete the Future successfully with the value given.
      * Call all the callbacks waiting on the completion of this Future.
      * <br><br>
-     * If this Future was already completed (either successful or unsuccessful), this method does nothing.
-     * <br><br>
      * If the supplier throws an exception, the Future will be completed with the exception.
      *
      * @param supplier the completion value supplier
-     * @return <code>true</code> if the Future was completed with the value,
-     * <code>false</code> otherwise
+     * @return a new Future
      */
     public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
         Future<T> future = new Future<>();
         try {
             future.complete(supplier.get());
+        } catch (Throwable e) {
+            future.fail(e);
+        }
+        return future;
+    }
+
+    /**
+     * Try to complete the Future successfully by completing the specified action.
+     * Call all the callbacks waiting on the completion of this Future.
+     * <br><br>
+     * If the action throws an exception, the Future will be completed with the exception.
+     * <br><br>
+     *
+     * @param action the task to try to complete
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableRunnable<Throwable> action) {
+        Future<T> future = new Future<>();
+        try {
+            action.run();
+            future.complete(null);
         } catch (Throwable e) {
             future.fail(e);
         }
