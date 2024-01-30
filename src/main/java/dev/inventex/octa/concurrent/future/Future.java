@@ -4,6 +4,7 @@ import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
 import dev.inventex.octa.function.ThrowableSupplier;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,31 +32,29 @@ public class Future<T> {
     /**
      * The object used for thread locking for unsafe value modifications.
      */
-    private final Object lock = new Object();
+    private final @NotNull Object lock = new Object();
 
     /**
      * The list of the future completion handlers.
      */
-    private final List<Consumer<T>> completionHandlers = new CopyOnWriteArrayList<>();
+    private final @NotNull List<Consumer<T>> completionHandlers = new CopyOnWriteArrayList<>();
 
     /**
      * The list of the future failure handlers.
      */
-    private final List<Consumer<Throwable>> errorHandlers = new CopyOnWriteArrayList<>();
+    private final @NotNull List<Consumer<Throwable>> errorHandlers = new CopyOnWriteArrayList<>();
 
     /**
      * The value of the completion result. Initially <code>null</code>, it is set to the completion object
      * after the completion is finished (which might still be <code>null</code>).
      */
-    @Nullable
-    private volatile T value;
+    private volatile @Nullable T value;
 
     /**
      * The error that occurred whilst executing and caused a future failure.
      * Initially <code>null</code>, after a failure, it is guaranteed to be non-null.
      */
-    @Nullable
-    private volatile Throwable error;
+    private volatile @Nullable Throwable error;
 
     /**
      * Indicates whether the future completion had been done (either successfully or unsuccessfully).
@@ -89,11 +88,31 @@ public class Future<T> {
     public T get() throws FutureExecutionException {
         try {
             // wait for the future completion without specifying a timeout
-            return await(0, false, null);
+            return blockForValue(0, false, null);
         } catch (FutureTimeoutException e) {
             // this should not happen
             throw new IllegalStateException("Timeout should have been avoided", e);
         }
+    }
+
+    /**
+     * Block the current thread and wait for the Future completion to happen.
+     * After the completion happened, the completion result T object is returned.
+     * <br><br>
+     * This is an alternative method for {@link #get()}. The purpose of this is to provide unsafe access via blocking
+     * to the Future's completion value in contexts, where the parent context will handle the exception.
+     * <br><br>
+     * If the future completes with an exception, a {@link FutureExecutionException} is thrown.
+     * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
+     * <br><br>
+     * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
+     * If the timeout is 0, the method will block indefinitely.
+     * <br><br>
+     * @return the completion value or a default value
+     */
+    @SneakyThrows()
+    public T await() {
+        return get();
     }
 
     /**
@@ -116,7 +135,7 @@ public class Future<T> {
      */
     public T get(long timeout) throws FutureTimeoutException, FutureExecutionException {
         // wait for the future completion with a specified timeout
-        return await(timeout, false, null);
+        return blockForValue(timeout, false, null);
     }
 
     /**
@@ -133,7 +152,7 @@ public class Future<T> {
     public T getOrDefault(@Nullable T defaultValue) {
         try {
             // wait for the future completion with a specified default value
-            return await(0, true, defaultValue);
+            return blockForValue(0, true, defaultValue);
         } catch (FutureExecutionException | FutureTimeoutException e) {
             // this should not happen
             throw new IllegalStateException("Timeout should have been avoided", e);
@@ -160,7 +179,7 @@ public class Future<T> {
     public T getOrDefault(long timeout, @Nullable T defaultValue) throws FutureTimeoutException {
         try {
             // wait for the future completion with a specified timeout and default value
-            return await(timeout, true, defaultValue);
+            return blockForValue(timeout, true, defaultValue);
         } catch (FutureExecutionException e) {
             // this should not happen
             throw new IllegalStateException("Execution exception should have been avoided", e);
@@ -193,7 +212,9 @@ public class Future<T> {
      * @see #getOrDefault(Object)
      * @see #getOrDefault(long, Object)
      */
-    private synchronized T await(long timeout, boolean hasDefault, @Nullable T defaultValue) throws FutureTimeoutException, FutureExecutionException {
+    private synchronized T blockForValue(
+        long timeout, boolean hasDefault, @Nullable T defaultValue
+    ) throws FutureTimeoutException, FutureExecutionException {
         // check if the future is already completed
         if (completed) {
             // check if the completion was successful
@@ -517,6 +538,256 @@ public class Future<T> {
             errorHandlers.add(future::fail);
             return future;
         }
+    }
+
+    /**
+     * Create a new Future that will asynchronously transform the value to a new Future
+     * using the given asynchronous transformer.
+     * <br><br>
+     * After this Future will successfully complete, the result will be passed to the specified transformer.
+     * The output of the transformer will be the input for the new Future.
+     * <br><br>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the transformer will be called
+     * immediately, and a completed Future will be returned.
+     *
+     * @param transformer the function that transforms the value from T to U
+     * @param <U> the new Future type
+     * @return a new Future of type U
+     */
+    public <U> Future<U> transformAsync(@NotNull Function<T, Future<U>> transformer) {
+        synchronized (lock) {
+            // check if the Future is already completed
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed)
+                    return failed(error);
+                // try to transform the future value
+                try {
+                    return transformer.apply(value);
+                } catch (Exception e) {
+                    // unable to transform the Future, return a failed Future
+                    return failed(e);
+                }
+            }
+            // the future hasn't been completed yet, create a new Future
+            // that will try to transform the value once it is completed
+            Future<U> future = new Future<>();
+            // register the Future completion transformer
+            completionHandlers.add(value -> {
+                // try to transform the Future value
+                try {
+                    transformer.apply(value).then(future::complete);
+                } catch (Exception e) {
+                    // unable to transform the value, fail the Future
+                    future.fail(e);
+                }
+            });
+            // register the error handler
+            errorHandlers.add(future::fail);
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will asynchronously transform the value to a new Future
+     * using the given asynchronous transformer.
+     * <br><br>
+     * After this Future will successfully complete, the result will be passed to the specified transformer.
+     * The output of the transformer will be the input for the new Future.
+     * <br><br>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the transformer will be called
+     * immediately, and a completed Future will be returned.
+     *
+     * @param transformer the function that transforms the value from T to U
+     * @param <U> the new Future type
+     * @return a new Future of type U
+     */
+    public <U> Future<U> tryTransformAsync(@NotNull ThrowableFunction<T, Future<U>, Throwable> transformer) {
+        synchronized (lock) {
+            // check if the Future is already completed
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed)
+                    return failed(error);
+                // try to transform the future value
+                try {
+                    return transformer.apply(value);
+                } catch (Throwable e) {
+                    // unable to transform the Future, return a failed Future
+                    return failed(e);
+                }
+            }
+            // the future hasn't been completed yet, create a new Future
+            // that will try to transform the value once it is completed
+            Future<U> future = new Future<>();
+            // register the Future completion transformer
+            completionHandlers.add(value -> {
+                // try to transform the Future value
+                try {
+                    transformer.apply(value).then(future::complete);
+                } catch (Throwable e) {
+                    // unable to transform the value, fail the Future
+                    future.fail(e);
+                }
+            });
+            // register the error handler
+            errorHandlers.add(future::fail);
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <br><br>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <br><br>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> Future<U> to(U value) {
+        // create a new Future that will supply the specified value
+        Future<U> future = new Future<>();
+
+        // supply the value when this Future completes
+        completionHandlers.add(ignored -> {
+            future.complete(value);
+        });
+
+        // proxy the error to the new Future
+        errorHandlers.add(future::fail);
+
+        return future;
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <br><br>
+     * When this Future completes with a value, the supplier will be called synchronously to get the value
+     * to complete the new Future with.
+     * <br><br>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <br><br>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> Future<U> to(Supplier<U> value) {
+        // create a new Future that will supply the specified value
+        Future<U> future = new Future<>();
+
+        // supply the value when this Future completes
+        completionHandlers.add(ignored -> {
+            future.complete(value.get());
+        });
+
+        // proxy the error to the new Future
+        errorHandlers.add(future::fail);
+
+        return future;
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <br><br>
+     * When this Future completes with a value, the supplier will be called synchronously to get the value
+     * to complete the new Future with.
+     * <br><br>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <br><br>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> Future<U> tryTo(ThrowableSupplier<U, Throwable> value) {
+        // create a new Future that will supply the specified value
+        Future<U> future = new Future<>();
+
+        // try to supply the value when this Future completes
+        completionHandlers.add(ignored -> {
+            try {
+                future.complete(value.get());
+            } catch (Throwable throwable) {
+                future.fail(throwable);
+            }
+        });
+
+        // proxy the error to the new Future
+        errorHandlers.add(future::fail);
+
+        return future;
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <br><br>
+     * When this Future completes with a value, the supplier will be called asynchronously to get the value
+     * to complete the new Future with.
+     * <br><br>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <br><br>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> Future<U> toAsync(Supplier<U> value) {
+        // create a new Future that will supply the specified value
+        Future<U> future = new Future<>();
+
+        // supply the value when this Future completes
+        completionHandlers.add(ignored -> {
+            Future.completeAsync(value).then(future::complete);
+        });
+
+        // proxy the error to the new Future
+        errorHandlers.add(future::fail);
+
+        return future;
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <br><br>
+     * When this Future completes with a value, the supplier will be called asynchronously to get the value
+     * to complete the new Future with.
+     * <br><br>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <br><br>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <br><br>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> Future<U> tryToAsync(ThrowableSupplier<U, Throwable> value) {
+        // create a new Future that will supply the specified value
+        Future<U> future = new Future<>();
+
+        // try to supply the value when this Future completes
+        completionHandlers.add(ignored -> {
+            Future.tryCompleteAsync(value)
+                .then(future::complete)
+                .except(future::fail);
+        });
+
+        // proxy the error to the new Future
+        errorHandlers.add(future::fail);
+
+        return future;
     }
 
     /**
