@@ -4,6 +4,7 @@ import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
 import dev.inventex.octa.function.ThrowableSupplier;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,12 +24,21 @@ import java.util.function.*;
  * Error recovery is also possible using the {@link #fallback(Object)} and {@link #fallback(Function)} methods.
  * <br>
  * The syntax encourages chaining, therefore less code is needed to handle certain tasks/events.
+ *
  * @param <T> the type of the returned value of the completed Future
  * @author AdvancedAntiSkid
  * @author MrGazdag
  * @since 1.0
  */
 public class Future<T> {
+    /**
+     * The global executor to be used for performing asynchronous tasks, where the executor is not specified explicitly.
+     */
+    @Setter
+    private static @NotNull Executor globalExecutor = Executors.newFixedThreadPool(
+        Runtime.getRuntime().availableProcessors()
+    );
+
     /**
      * The object used for thread locking for unsafe value modifications.
      */
@@ -67,7 +77,7 @@ public class Future<T> {
     private volatile boolean failed;
 
     /**
-     * Creates a new, uncompleted Future.
+     * Creates a new, incomplete Future.
      */
     public Future() {
     }
@@ -1330,16 +1340,12 @@ public class Future<T> {
      * @param task the task to perform
      */
     private void executeLockedAsync(@NotNull Runnable task) {
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        // execute the task asynchronously
-        executor.execute(() -> {
+        // use the global executor to run the task on
+        globalExecutor.execute(() -> {
             // lock the Future operations and run the task
             synchronized (lock) {
                 task.run();
             }
-            // execution has been finished, shutdown the executor
-            executor.shutdown();
         });
     }
 
@@ -1512,17 +1518,14 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        // use the global executor to run the completion on
+        globalExecutor.execute(() -> {
             // complete the future
             try {
                 future.complete(result);
             } catch (Exception e) {
                 future.fail(e);
             }
-            // execution has been finished, shutdown the executor
-            executor.shutdown();
         });
         return future;
     }
@@ -1544,17 +1547,14 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        // use the global executor to run the completion on
+        globalExecutor.execute(() -> {
             // complete the future
             try {
                 future.complete(result.get());
             } catch (Exception e) {
                 future.fail(e);
             }
-            // execution has been finished, shutdown the executor
-            executor.shutdown();
         });
         return future;
     }
@@ -1576,17 +1576,14 @@ public class Future<T> {
     public static <T> @NotNull Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        // use the global executor to run the completion on
+        globalExecutor.execute(() -> {
             // complete the future
             try {
                 future.complete(result.get());
             } catch (Throwable e) {
                 future.fail(e);
             }
-            // execution has been finished, shutdown the executor
-            executor.shutdown();
         });
         return future;
     }
@@ -1607,9 +1604,8 @@ public class Future<T> {
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task) {
         // create an empty future
         Future<Void> future = new Future<>();
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        // use the global executor to run the completion on
+        globalExecutor.execute(() -> {
             try {
                 task.run();
                 future.complete(null);
@@ -1636,9 +1632,8 @@ public class Future<T> {
     public static @NotNull Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
         // create an empty future
         Future<Void> future = new Future<>();
-        // create a new executor to run the completion on
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        // use the global executor to run the completion on
+        globalExecutor.execute(() -> {
             try {
                 task.run();
                 future.complete(null);
