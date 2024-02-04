@@ -120,7 +120,7 @@ public class Future<T> {
      * <br><br>
      * @return the completion value or a default value
      */
-    @SneakyThrows()
+    @SneakyThrows
     public T await() {
         return get();
     }
@@ -456,6 +456,7 @@ public class Future<T> {
      * <br><br>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
+     * <p>
      *
      * @param transformer the function that transforms the value from T to U
      * @param <U> the new Future type
@@ -557,10 +558,16 @@ public class Future<T> {
      * <br><br>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
+     * <p>
+     * If you want to get the completion value of this Future after the transformer Future is completed,
+     * consider using {@link #chain(Future)} instead.
+     * </p>
      *
      * @param transformer the function that transforms the value from T to U
      * @param <U> the new Future type
      * @return a new Future of type U
+     * 
+     * @see #chain(Future) 
      */
     public <U> @NotNull Future<U> transformAsync(@NotNull Function<T, Future<U>> transformer) {
         synchronized (lock) {
@@ -1308,6 +1315,54 @@ public class Future<T> {
                 // register the error handler
                 errorHandlers.add(future::fail);
             }
+            return future;
+        }
+    }
+
+    /**
+     * Chain the execution of another Future to this Future.
+     * <p>
+     * Wait for this Future to complete successfully, then call the other Future.
+     * The new Future will be completed when the other Future is completed.
+     * <p>
+     * If this Future fails, the other Future will not be called.
+     * <p>
+     * If this Future completes, and then the other Future fails, the new Future
+     * will be failed with the other Future's exception.
+     * <p>
+     * The completion value of the other Future will not be returned here.
+     * In case you want to access that value, consider using {@link #transformAsync(Function)} instead.
+     *
+     * @param other the Future to complete after this Future completes
+     * @return a new Future that will be completed when this- and the other Future completes
+     * @param <U> the type of the other future
+     *           
+     * @see #transformAsync(Function)
+     */
+    public <U> Future<T> chain(Future<U> other) {
+        synchronized (lock) {
+            Future<T> future = new Future<>();
+
+            // check if the Future is already completed
+            if (completed) {
+                // do not complete the other Future if this Future fails
+                if (failed) 
+                    future.fail(error);
+                // try to complete the other Future if this Future was already completed
+                else other
+                    .then(value -> future.complete(this.value))
+                    .except(future::fail);
+            }
+            // the Future hasn't been completed yet
+            else {
+                // try to complete the other Future, when this Future will complete
+                completionHandlers.add(value -> other
+                    .then(ignored -> future.complete(value))
+                    .except(future::fail));
+                // fail the new Future if this Future fails
+                errorHandlers.add(future::fail);
+            }
+
             return future;
         }
     }
