@@ -73,12 +73,12 @@ public class Future<T> {
     /**
      * The list of the future completion handlers.
      */
-    private final @NotNull List<Consumer<T>> completionHandlers = new CopyOnWriteArrayList<>();
+    private final @NotNull List<@NotNull Consumer<@Nullable T>> completionHandlers = new CopyOnWriteArrayList<>();
 
     /**
      * The list of the future failure handlers.
      */
-    private final @NotNull List<Consumer<Throwable>> errorHandlers = new CopyOnWriteArrayList<>();
+    private final @NotNull List<@NotNull Consumer<@NotNull Throwable>> errorHandlers = new CopyOnWriteArrayList<>();
 
     /**
      * The value of the completion result. Initially <code>null</code>, it is set to the completion object
