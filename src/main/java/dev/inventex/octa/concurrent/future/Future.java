@@ -1,15 +1,18 @@
 package dev.inventex.octa.concurrent.future;
 
+import com.google.common.collect.MapMaker;
 import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
 import dev.inventex.octa.function.ThrowableSupplier;
+import dev.inventex.octa.util.Validator;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.*;
 
@@ -38,6 +41,29 @@ public class Future<T> {
     private static @NotNull Executor globalExecutor = Executors.newFixedThreadPool(
         Runtime.getRuntime().availableProcessors()
     );
+
+    /**
+     * The map of executors that should be used for the specified contexts.
+     */
+    private static final @NotNull Map<@NotNull Object, @Nullable Executor> contextExecutors = new MapMaker()
+        .weakKeys()
+        .weakValues()
+        .concurrencyLevel(4)
+        .makeMap();
+
+    /**
+     * The function that is used to determine what information should be used from the class to group
+     * multiple classes together, and cache a shared executor for each.
+     */
+    @Setter
+    private static @NotNull Function<@NotNull Class<?>, @NotNull Object> contextKeyMapper = Class::getClassLoader;
+
+    /**
+     * The function that resolves an executor for the specified key. The key is resolved from the class by the
+     * {@link #contextKeyMapper} function.
+     */
+    @Setter
+    private static @NotNull Function<@NotNull Object, @Nullable Executor> contextExecutorMapper = key -> globalExecutor;
 
     /**
      * The object used for thread locking for unsafe value modifications.
@@ -1395,8 +1421,8 @@ public class Future<T> {
      * @param task the task to perform
      */
     private void executeLockedAsync(@NotNull Runnable task) {
-        // use the global executor to run the task on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller's context to run the task on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // lock the Future operations and run the task
             synchronized (lock) {
                 task.run();
@@ -1573,8 +1599,8 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // use the global executor to run the completion on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller class context to run the completion on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
             try {
                 future.complete(result);
@@ -1602,8 +1628,8 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // use the global executor to run the completion on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller class context to run the completion on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
             try {
                 future.complete(result.get());
@@ -1631,8 +1657,8 @@ public class Future<T> {
     public static <T> @NotNull Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
         // create an empty future
         Future<T> future = new Future<>();
-        // use the global executor to run the completion on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller class context to run the completion on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
             try {
                 future.complete(result.get());
@@ -1659,8 +1685,8 @@ public class Future<T> {
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task) {
         // create an empty future
         Future<Void> future = new Future<>();
-        // use the global executor to run the completion on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller class context to run the completion on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             try {
                 task.run();
                 future.complete(null);
@@ -1687,8 +1713,8 @@ public class Future<T> {
     public static @NotNull Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
         // create an empty future
         Future<Void> future = new Future<>();
-        // use the global executor to run the completion on
-        globalExecutor.execute(() -> {
+        // use the executor of the caller class context to run the completion on
+        getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             try {
                 task.run();
                 future.complete(null);
@@ -1796,5 +1822,50 @@ public class Future<T> {
             future.fail(e);
         }
         return future;
+    }
+
+    /**
+     * Resolve the executor for the specified stack trace.
+     *
+     * @param stackTrace the stack trace of the method to be checked
+     * @return the executor for the stack trace or the global executor
+     */
+    private static @NotNull Executor getExecutor(@NotNull StackTraceElement @NotNull [] stackTrace) {
+        // validate that the class key and executor resolver functions are not set to null
+        Validator.notNull(contextKeyMapper, "context key mapper");
+        Validator.notNull(contextExecutorMapper, "context executor mapper");
+
+        // retrieve the global executor if the stack trace may not contain the caller class
+        if (stackTrace.length < 3)
+            return globalExecutor;
+
+        // resolve the class type of the method's caller
+        Class<?> type;
+        try {
+            type = Class.forName(stackTrace[2].getClassName());
+        } catch (ClassNotFoundException ignored) {
+            return globalExecutor;
+        }
+
+        // resolve the key to cache the class executor with
+        Object key = contextKeyMapper.apply(type);
+        Validator.notNull(key, "context key");
+
+        // check if an executor is already cached for the key
+        Executor executor = contextExecutors.get(key);
+        if (executor != null)
+            return executor;
+
+        // apply the function to resolve the executor with
+        executor = contextExecutorMapper.apply(key);
+
+        // cache the executor if the function was able to resolve it
+        if (executor != null && executor != globalExecutor) {
+            contextExecutors.put(key, executor);
+            return executor;
+        }
+
+        // unable to resolve the executor, return the global executor instead
+        return globalExecutor;
     }
 }
