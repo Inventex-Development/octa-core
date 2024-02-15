@@ -870,6 +870,33 @@ public class Future<T> {
     }
 
     /**
+     * Create a new Future that does not care about the completion value, it only checks for successful or
+     * failed completion.
+     * <br><br>
+     * The Future will be completed successfully in every case.
+     * <br><br>
+     * The Future will be completed with the value of <code>true</code> if the current Future completes successfully,
+     * and with the value of <code>false</code> if the current Future fails with an exception.
+     *
+     * @return a new Future of Boolean type
+     */
+    public @NotNull Future<Boolean> status() {
+        synchronized (lock) {
+            // check if the Future is already completed
+            if (completed)
+                return completed(!failed);
+
+            // create a new Future that will be completed with the status of this Future
+            Future<Boolean> future = new Future<>();
+            // complete the Future with true, if it completes successfully
+            completionHandlers.add(ignored -> future.complete(true));
+            // complete the Future with false, if it fails with an exception
+            errorHandlers.add(ignored -> future.complete(false));
+            return future;
+        }
+    }
+
+    /**
      * Register a failure handler to be called when the Future completes with an error.
      * <br><br>
      * If the Future completes successfully, the specified <code>action</code> will not be called.
