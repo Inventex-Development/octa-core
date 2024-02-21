@@ -1062,6 +1062,7 @@ public class Future<T> {
                 // the completion was successful, return the completion value
                 return completed(value);
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will use the fallback value if the current Future fails
             Future<T> future = new Future<>();
@@ -1069,6 +1070,50 @@ public class Future<T> {
             completionHandlers.add(future::complete);
             // register the error fallback handler
             errorHandlers.add(error -> future.complete(fallbackValue));
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will statically cast the value of the completion value to the specified class type.
+     * <br><br>
+     * If this Future completes successfully, the new Future will be completed
+     * with the completion value cast to the specified type.
+     * <br><br>
+     * If this Future fails with an exception, the new Future will be failed with the same exception.
+     *
+     * @param type the type of the class to cast the completion value to
+     * @return a new Future of the type U
+     * @param <U> the type of the class to cast to
+     */
+    public <U> @NotNull Future<U> cast(@NotNull Class<U> type) {
+        synchronized (lock) {
+            // check if the Future is already completed
+            if (completed) {
+                // return a failed future if this future is already failed
+                if (failed)
+                    return failed(error);
+
+                // check if the completed value cannot be cast to the specified type
+                if (value != null && !value.getClass().isAssignableFrom(type))
+                    return failed(new ClassCastException(value.getClass() + " cannot be casted to " + type));
+
+                // return a completed future if this future is already completed
+                return completed(type.cast(value));
+            }
+
+            // the future hasn't been completed yet, create a new Future
+            // that will cast the completion value if the current Future completes
+            Future<U> future = new Future<>();
+            // register the completion handler
+            completionHandlers.add(value -> {
+                if (value != null && !value.getClass().isAssignableFrom(type))
+                    future.fail(new ClassCastException(value.getClass() + " cannot be casted to " + type));
+                else
+                    future.complete(type.cast(value));
+            });
+            // register the error fallback handler
+            errorHandlers.add(future::fail);
             return future;
         }
     }
