@@ -1,6 +1,7 @@
 package dev.inventex.octa.concurrent.future;
 
 import com.google.common.collect.MapMaker;
+import com.google.errorprone.annotations.CheckReturnValue;
 import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
@@ -256,13 +257,16 @@ public class Future<T> {
             // check if the completion was successful
             if (!failed)
                 return value;
+
             // completion was unsuccessful
             // return the default value if it is present
             if (hasDefault)
                 return defaultValue;
+
             // no default value set, throw the completion error
             throw new FutureExecutionException(error);
         }
+
         // the future is not yet completed
         // ensure the lock is not used externally
         synchronized (lock) {
@@ -274,17 +278,21 @@ public class Future<T> {
                 // ignore if the completion thread was interrupted
             }
         }
+
         // check if the timeout has been exceeded, but the future hasn't been completed yet
         if (!completed)
             throw new FutureTimeoutException(timeout);
+
         // the future has been completed
         // check if the completion was successful
         if (!failed)
             return value;
+
         // the completion was unsuccessful
         // return the default value if it is present
         if (hasDefault)
             return defaultValue;
+
         // no default value set, throw the completion error
         throw new FutureExecutionException(error);
     }
@@ -312,12 +320,14 @@ public class Future<T> {
         // check if the future is already completed
         if (completed)
             return false;
+
         // set the completion value and unlock the waiting thread
         synchronized (lock) {
             this.value = value;
             completed = true;
             lock.notify();
         }
+
         // call the completion handlers
         handleCompleted(value);
         return true;
@@ -354,6 +364,7 @@ public class Future<T> {
         // check if the future is already completed
         if (completed)
             return false;
+
         // set the error and unlock the waiting thread
         synchronized (lock) {
             this.error = error;
@@ -361,6 +372,7 @@ public class Future<T> {
             failed = true;
             lock.notify();
         }
+
         // call the failure handlers
         handleFailed(error);
         return true;
@@ -400,10 +412,12 @@ public class Future<T> {
             // register the action if the Future hasn't been completed yet
             if (!completed)
                 completionHandlers.add(action);
-                // the Future is already completed
-                // call the callback if the completion was successful
+
+            // the Future is already completed
+            // call the callback if the completion was successful
             else if (!failed)
                 action.accept(value);
+
             return this;
         }
     }
@@ -432,8 +446,9 @@ public class Future<T> {
                         fail(e);
                     }
                 });
-                // the Future is already completed
-                // call the callback if the completion was successful
+
+            // the Future is already completed
+            // call the callback if the completion was successful
             else if (!failed) {
                 try {
                     action.accept(value);
@@ -441,6 +456,7 @@ public class Future<T> {
                     fail(e);
                 }
             }
+
             return this;
         }
     }
@@ -463,10 +479,12 @@ public class Future<T> {
             // register the action if the Future hasn't been completed yet
             if (!completed)
                 completionHandlers.add(value -> executeLockedAsync(() -> action.accept(value)));
+
             // the Future is already completed
             // call the callback if the completion was successful
             else if (!failed)
                 executeLockedAsync(() -> action.accept(value));
+
             return this;
         }
     }
@@ -493,8 +511,12 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was unsuccessful
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // try to transform the future value
                 try {
                     return completed(transformer.apply(value));
@@ -503,9 +525,11 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the value once it is completed
             Future<U> future = new Future<>();
+
             // register the Future completion transformer
             completionHandlers.add(value -> {
                 // try to transform the Future value
@@ -516,6 +540,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             // register the error handler
             errorHandlers.add(future::fail);
             return future;
@@ -543,8 +568,12 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was unsuccessful
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // try to transform the future value
                 try {
                     return completed(transformer.apply(value));
@@ -553,9 +582,11 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the value once it is completed
             Future<U> future = new Future<>();
+
             // register the Future completion transformer
             completionHandlers.add(value -> {
                 // try to transform the Future value
@@ -566,6 +597,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             // register the error handler
             errorHandlers.add(future::fail);
             return future;
@@ -600,8 +632,12 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was unsuccessful
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // try to transform the future value
                 try {
                     return transformer.apply(value);
@@ -610,9 +646,11 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the value once it is completed
             Future<U> future = new Future<>();
+
             // register the Future completion transformer
             completionHandlers.add(value -> {
                 // try to transform the Future value
@@ -623,6 +661,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             // register the error handler
             errorHandlers.add(future::fail);
             return future;
@@ -651,8 +690,12 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was unsuccessful
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // try to transform the future value
                 try {
                     return transformer.apply(value);
@@ -661,9 +704,11 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the value once it is completed
             Future<U> future = new Future<>();
+
             // register the Future completion transformer
             completionHandlers.add(value -> {
                 // try to transform the Future value
@@ -674,6 +719,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             // register the error handler
             errorHandlers.add(future::fail);
             return future;
@@ -787,9 +833,7 @@ public class Future<T> {
         Future<U> future = new Future<>();
 
         // supply the value when this Future completes
-        completionHandlers.add(ignored -> {
-            Future.completeAsync(value).then(future::complete);
-        });
+        completionHandlers.add(ignored -> Future.completeAsync(value).then(future::complete));
 
         // proxy the error to the new Future
         errorHandlers.add(future::fail);
@@ -816,11 +860,9 @@ public class Future<T> {
         Future<U> future = new Future<>();
 
         // try to supply the value when this Future completes
-        completionHandlers.add(ignored -> {
-            Future.tryCompleteAsync(value)
-                .then(future::complete)
-                .except(future::fail);
-        });
+        completionHandlers.add(ignored -> Future.tryCompleteAsync(value)
+            .then(future::complete)
+            .except(future::fail));
 
         // proxy the error to the new Future
         errorHandlers.add(future::fail);
@@ -846,8 +888,12 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was unsuccessful
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // try to transform the future value
                 try {
                     return completed((Void) null);
@@ -856,6 +902,7 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the value once it is completed
             Future<Void> future = new Future<>();
@@ -863,6 +910,7 @@ public class Future<T> {
             completionHandlers.add(value -> {
                 future.complete(null);
             });
+
             // register the error handler
             errorHandlers.add(future::fail);
             return future;
@@ -888,10 +936,13 @@ public class Future<T> {
 
             // create a new Future that will be completed with the status of this Future
             Future<Boolean> future = new Future<>();
+
             // complete the Future with true, if it completes successfully
             completionHandlers.add(ignored -> future.complete(true));
+
             // complete the Future with false, if it fails with an exception
             errorHandlers.add(ignored -> future.complete(false));
+
             return future;
         }
     }
@@ -914,10 +965,12 @@ public class Future<T> {
             // register the action if the Future hasn't been completed yet
             if (!completed)
                 errorHandlers.add(action);
-                // the Future is already completed
-                // call the callback if the completion was unsuccessful
+
+            // the Future is already completed
+            // call the callback if the completion was unsuccessful
             else if (failed)
                 action.accept(error);
+
             return this;
         }
     }
@@ -946,6 +999,7 @@ public class Future<T> {
                         // future is already failed, do not fail again
                     }
                 });
+
             // the Future is already completed
             // call the callback if the completion was unsuccessful
             else if (failed) {
@@ -955,6 +1009,7 @@ public class Future<T> {
                     // future is already failed, do not fail again
                 }
             }
+
             return this;
         }
     }
@@ -977,10 +1032,12 @@ public class Future<T> {
             // register the action if the Future hasn't been completed yet
             if (!completed)
                 errorHandlers.add(error -> executeLockedAsync(() -> action.accept(error)));
-                // the Future is already completed
-                // call the callback if the completion was unsuccessful
+
+            // the Future is already completed
+            // call the callback if the completion was unsuccessful
             else if (failed)
                 executeLockedAsync(() -> action.accept(error));
+
             return this;
         }
     }
@@ -1008,6 +1065,7 @@ public class Future<T> {
                 // check if the completion was successful
                 if (!failed)
                     return completed(value);
+
                 // try to transform the error to a value
                 try {
                     return completed(transformer.apply(error));
@@ -1016,11 +1074,14 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the future hasn't been completed yet, create a new Future
             // that will try to transform the error once it is failed
             Future<T> future = new Future<>();
+
             // register the completion handler
             completionHandlers.add(future::complete);
+
             // register the error transformer
             errorHandlers.add(error -> {
                 // try to transform the Future error
@@ -1031,6 +1092,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             return future;
         }
     }
@@ -1059,6 +1121,7 @@ public class Future<T> {
                 // current Future's completion was failed
                 if (failed)
                     return completed(fallbackValue);
+
                 // the completion was successful, return the completion value
                 return completed(value);
             }
@@ -1066,8 +1129,10 @@ public class Future<T> {
             // the future hasn't been completed yet, create a new Future
             // that will use the fallback value if the current Future fails
             Future<T> future = new Future<>();
+
             // register the completion handler
             completionHandlers.add(future::complete);
+
             // register the error fallback handler
             errorHandlers.add(error -> future.complete(fallbackValue));
             return future;
@@ -1091,10 +1156,14 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // return a failed future if this future is already failed
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
 
                 // check if the completed value cannot be cast to the specified type
+                T value = this.value;
                 if (value != null && !value.getClass().isAssignableFrom(type))
                     return failed(new ClassCastException(value.getClass() + " cannot be casted to " + type));
 
@@ -1105,6 +1174,7 @@ public class Future<T> {
             // the future hasn't been completed yet, create a new Future
             // that will cast the completion value if the current Future completes
             Future<U> future = new Future<>();
+
             // register the completion handler
             completionHandlers.add(value -> {
                 if (value != null && !value.getClass().isAssignableFrom(type))
@@ -1112,6 +1182,7 @@ public class Future<T> {
                 else
                     future.complete(type.cast(value));
             });
+
             // register the error fallback handler
             errorHandlers.add(future::fail);
             return future;
@@ -1150,9 +1221,11 @@ public class Future<T> {
                 action.accept(value, error);
                 return this;
             }
+
             // the Future hasn't been completed yet, register the callbacks
             completionHandlers.add(value -> action.accept(value, null));
             errorHandlers.add(error -> action.accept(null, error));
+
             return this;
         }
     }
@@ -1196,8 +1269,10 @@ public class Future<T> {
                     return failed(e);
                 }
             }
+
             // the Future hasn't been completed yet, create a new one
             Future<U> future = new Future<>();
+
             // register the completion transformer
             completionHandlers.add(value -> {
                 // try to transform the value
@@ -1208,6 +1283,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             // register the failure transformer
             errorHandlers.add(error -> {
                 // try to transform the error
@@ -1218,6 +1294,7 @@ public class Future<T> {
                     future.fail(e);
                 }
             });
+
             return future;
         }
     }
@@ -1232,22 +1309,31 @@ public class Future<T> {
             // check if the future is already completed
             if (completed) {
                 // fail the future it was already failed
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // fail the future if the predicate did not pass
                 if (!predicate.test(value))
                     return failed(new FutureExecutionException("Predicate failed for value `" + value + "`"));
+
                 return completed(value);
             }
+
             // create a future that will fail if the predicate fails the completion value
             Future<T> future = new Future<>();
+
             completionHandlers.add(value -> {
                 if (predicate.test(value))
                     future.complete(value);
                 else
                     future.fail(new FutureExecutionException("Predicate failed for value `" + value + "`"));
             });
+
             errorHandlers.add(future::fail);
+
             return future;
         }
     }
@@ -1266,16 +1352,23 @@ public class Future<T> {
             // check if the future is already completed
             if (completed) {
                 // check if the future is already failed
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // run the predicate and test if the future should fail
                 Throwable error = predicate.apply(value);
                 if (error != null)
                     return failed(error);
+
                 // future passed the predicate, return the completion value
                 return completed(value);
             }
+
             Future<T> future = new Future<>();
+
             // the future isn't completed yet
             completionHandlers.add(value -> {
                 // run the predicate and test if the future should fail
@@ -1285,6 +1378,7 @@ public class Future<T> {
                 // future passed the predicate, complete with the value
                 future.complete(value);
             });
+
             return future;
         }
     }
@@ -1304,16 +1398,23 @@ public class Future<T> {
             // check if the future is already completed
             if (completed) {
                 // check if the future is already failed
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     return failed(error);
+                }
+
                 // run the predicate and test if the future should fail
                 Throwable error = predicate.apply(value, this.error);
                 if (error != null)
                     return failed(error);
+
                 // future passed the predicate, return the completion value
                 return completed(value);
             }
+
             Future<T> future = new Future<>();
+
             // the future isn't completed yet
             completionHandlers.add(value -> {
                 // run the predicate and test if the future should fail
@@ -1323,6 +1424,7 @@ public class Future<T> {
                 // future passed the predicate, complete with the value
                 future.complete(value);
             });
+
             return future;
         }
     }
@@ -1346,9 +1448,13 @@ public class Future<T> {
                 // check if the completion was successful
                 if (!failed)
                     return completed(value);
+
                 // future was failed, retrieve the error
+                Throwable error = this.error;
+                assert error != null;
                 return failed(error);
             }
+
             // create a new thread to run the timeout countdown on
             ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
             // register the completion handler
@@ -1358,6 +1464,7 @@ public class Future<T> {
                 // shutdown the timeout task
                 executor.shutdownNow();
             });
+
             // register the error handler
             errorHandlers.add(error -> {
                 // fail the timeout future
@@ -1365,6 +1472,7 @@ public class Future<T> {
                 // shutdown the timeout task
                 executor.shutdownNow();
             });
+
             // execute the completion using the timeout delay
             executor.schedule(() -> {
                 // fail the future if it hasn't been completed yet, and the
@@ -1372,6 +1480,7 @@ public class Future<T> {
                 future.fail(new FutureTimeoutException(timeout));
                 // execution has been finished, shutdown the executor
                 executor.shutdown();
+
             }, timeout, TimeUnit.MILLISECONDS);
             return future;
         }
@@ -1409,6 +1518,7 @@ public class Future<T> {
                 else
                     future.complete(value);
             }
+
             // the Future hasn't been completed yet
             else {
                 // register the completion handler
@@ -1416,6 +1526,7 @@ public class Future<T> {
                 // register the error handler
                 errorHandlers.add(future::fail);
             }
+
             return future;
         }
     }
@@ -1454,6 +1565,7 @@ public class Future<T> {
                     .then(value -> future.complete(this.value))
                     .except(future::fail);
             }
+
             // the Future hasn't been completed yet
             else {
                 // try to complete the other Future, when this Future will complete
@@ -1475,6 +1587,7 @@ public class Future<T> {
      * @return <code>true</code> if this Future has already completed, <code>false</code> otherwise
      * @see #isFailed()
      */
+    @CheckReturnValue
     public boolean isCompleted() {
         return completed;
     }
@@ -1486,6 +1599,7 @@ public class Future<T> {
      * @return <code>true</code> if the completion was unsuccessful, <code>false</code> otherwise
      * @see #isCompleted()
      */
+    @CheckReturnValue
     public boolean isFailed() {
         return failed;
     }
@@ -1515,9 +1629,11 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completed(@Nullable T value) {
         // create a new empty Future
         Future<T> future = new Future<>();
+
         // set the future state
         future.value = value;
         future.completed = true;
+
         return future;
     }
 
@@ -1530,8 +1646,10 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completed() {
         // create a new empty Future
         Future<T> future = new Future<>();
+
         // set the future state
         future.completed = true;
+
         return future;
     }
 
@@ -1545,9 +1663,11 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completed(@NotNull Supplier<T> value) {
         // create a new empty Future
         Future<T> future = new Future<>();
+
         // set the future state
         future.value = value.get();
         future.completed = true;
+
         return future;
     }
 
@@ -1561,10 +1681,12 @@ public class Future<T> {
     public static <T> @NotNull Future<T> failed(@NotNull Throwable error) {
         // create a new empty Future
         Future<T> future = new Future<>();
+
         // set the future state
         future.error = error;
         future.completed = true;
         future.failed = true;
+
         return future;
     }
 
@@ -1586,6 +1708,7 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
+
         // complete the future on the executor thread
         executor.execute(() -> {
             try {
@@ -1595,6 +1718,7 @@ public class Future<T> {
             }
         });
         return future;
+
     }
 
     /**
@@ -1615,6 +1739,7 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
+
         // complete the future on the executor thread
         executor.execute(() -> {
             try {
@@ -1623,6 +1748,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1646,6 +1772,7 @@ public class Future<T> {
     ) {
         // create an empty future
         Future<T> future = new Future<>();
+
         // complete the future on the executor thread
         executor.execute(() -> {
             try {
@@ -1654,6 +1781,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1674,6 +1802,8 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result) {
         // create an empty future
         Future<T> future = new Future<>();
+
+
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
@@ -1683,6 +1813,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1703,6 +1834,7 @@ public class Future<T> {
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result) {
         // create an empty future
         Future<T> future = new Future<>();
+
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
@@ -1712,6 +1844,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1732,6 +1865,7 @@ public class Future<T> {
     public static <T> @NotNull Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
         // create an empty future
         Future<T> future = new Future<>();
+
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
@@ -1741,6 +1875,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1760,6 +1895,7 @@ public class Future<T> {
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task) {
         // create an empty future
         Future<Void> future = new Future<>();
+
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             try {
@@ -1769,6 +1905,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1788,6 +1925,7 @@ public class Future<T> {
     public static @NotNull Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
         // create an empty future
         Future<Void> future = new Future<>();
+
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             try {
@@ -1797,6 +1935,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1817,6 +1956,7 @@ public class Future<T> {
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task, @NotNull Executor executor) {
         // create an empty future
         Future<Void> future = new Future<>();
+
         executor.execute(() -> {
             try {
                 task.run();
@@ -1825,6 +1965,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1847,6 +1988,7 @@ public class Future<T> {
     ) {
         // create an empty future
         Future<Void> future = new Future<>();
+
         executor.execute(() -> {
             try {
                 task.run();
@@ -1855,6 +1997,7 @@ public class Future<T> {
                 future.fail(e);
             }
         });
+
         return future;
     }
 
@@ -1869,11 +2012,13 @@ public class Future<T> {
      */
     public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
         Future<T> future = new Future<>();
+
         try {
             future.complete(supplier.get());
         } catch (Throwable e) {
             future.fail(e);
         }
+
         return future;
     }
 
@@ -1890,12 +2035,14 @@ public class Future<T> {
      */
     public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableRunnable<Throwable> action) {
         Future<T> future = new Future<>();
+
         try {
             action.run();
             future.complete(null);
         } catch (Throwable e) {
             future.fail(e);
         }
+
         return future;
     }
 
