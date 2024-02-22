@@ -21,7 +21,7 @@ import java.util.function.*;
  * A Future represents a callback, which can be completed or failed either synchronously or asynchronously.
  * A Future can be completed with the creation of A new I object, and can be failed by an exception
  * happening whilst executing a Future task.
- * <br><br>
+ * <p>
  * This class also contains useful methods to attach callbacks for completion/failure events,
  * and to create new Future objects based on this instance.
  * <br>
@@ -112,12 +112,12 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, a {@link FutureExecutionException} is thrown.
      * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
-     * <br><br>
+     * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <br><br>
+     * <p>
      * @return the completion value or a default value
      *
      * @throws FutureExecutionException the completion failed and there was no default value to return
@@ -135,16 +135,16 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * This is an alternative method for {@link #get()}. The purpose of this is to provide unsafe access via blocking
      * to the Future's completion value in contexts, where the parent context will handle the exception.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, a {@link FutureExecutionException} is thrown.
      * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
-     * <br><br>
+     * <p>
      * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
      * If the timeout is 0, the method will block indefinitely.
-     * <br><br>
+     * <p>
      * @return the completion value or a default value
      */
     @SneakyThrows
@@ -155,15 +155,15 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, a {@link FutureExecutionException} is thrown.
      * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
-     * <br><br>
+     * <p>
      * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
      * If the timeout is 0, the method will block indefinitely.
-     * <br><br>
+     * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <br><br>
+     * <p>
      * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown.
      * @return the completion value or a default value
      *
@@ -178,11 +178,11 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, the <code>defaultValue</code> is returned.
-     * <br><br>
+     * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <br><br>
+     * <p>
      * @param defaultValue the default value which is returned on a completion failure
      * @return the completion value or a default value
      */
@@ -199,14 +199,14 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, the <code>defaultValue</code> is returned.
-     * <br><br>
+     * <p>
      * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
      * If the timeout is 0, the method will block indefinitely.
-     * <br><br>
+     * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <br><br>
+     * <p>
      * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown.
      * @param defaultValue the default value which is returned on a completion failure
      * @return the completion value or a default value
@@ -226,16 +226,16 @@ public class Future<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
-     * <br><br>
+     * <p>
      * If the future completes with an exception, a {@link FutureExecutionException} is thrown,
      * or the <code>defaultValue</code> is returned if present.
      * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
-     * <br><br>
+     * <p>
      * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
      * If the timeout is 0, the method will block indefinitely.
-     * <br><br>
+     * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <br><br>
+     * <p>
      * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown.
      * @param hasDefault indicates whether a default value should be returned on a completion failure
      * @param defaultValue the default value which is returned on a completion failure
@@ -309,7 +309,7 @@ public class Future<T> {
     /**
      * Complete the Future successfully with the value given.
      * Call all the callbacks waiting on the completion of this Future.
-     * <br><br>
+     * <p>
      * If this Future was already completed (either successful or unsuccessful), this method does nothing.
      *
      * @param value the completion value
@@ -354,7 +354,7 @@ public class Future<T> {
     /**
      * Fail the Future completion with the given error.
      * Call all the callbacks waiting on the failure of this Future.
-     * <br><br>
+     * <p>
      * If this Future was already completed (either successful or unsuccessful), this method does nothing.
      *
      * @param error the error occurred whilst completing
@@ -396,11 +396,11 @@ public class Future<T> {
 
     /**
      * Register a completion handler to be called when the Future completes without an error.
-     * <br><br>
+     * <p>
      * If the Future completes with an exception, the specified <code>action</code> will not be called.
      * If you wish to handle exceptions as well,
      * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed successfully, the action will be called immediately with
      * the completion value. If the Future failed with an exception, the action will not be called.
      *
@@ -424,11 +424,11 @@ public class Future<T> {
 
     /**
      * Register a completion handler to be called when the Future completes without an error.
-     * <br><br>
+     * <p>
      * If the Future completes with an exception, the specified <code>action</code> will not be called.
      * If you wish to handle exceptions as well,
      * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed successfully, the action will be called immediately with
      * the completion value. If the Future failed with an exception, the action will not be called.
      *
@@ -463,11 +463,11 @@ public class Future<T> {
 
     /**
      * Register an asynchronous completion handler to be called when the Future completes without an error.
-     * <br><br>
+     * <p>
      * If the Future completes with an exception, the specified <code>action</code> will not be called.
      * If you wish to handle exceptions as well,
      * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed successfully, the action will be called immediately with
      * the completion value. If the Future failed with an exception, the action will not be called.
      *
@@ -491,13 +491,13 @@ public class Future<T> {
 
     /**
      * Create a new Future that will transform the value to a new Future using the given transformer.
-     * <br><br>
+     * <p>
      * After this Future will successfully complete, the result will be passed to the specified transformer.
      * The output of the transformer will be the input for the new Future.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future
      * will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
      * <p>
@@ -549,13 +549,13 @@ public class Future<T> {
 
     /**
      * Create a new Future that will transform the value to a new Future using the given transformer.
-     * <br><br>
+     * <p>
      * After this Future will successfully complete, the result will be passed to the specified transformer.
      * The output of the transformer will be the input for the new Future.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future
      * will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
      *
@@ -607,13 +607,13 @@ public class Future<T> {
     /**
      * Create a new Future that will asynchronously transform the value to a new Future
      * using the given asynchronous transformer.
-     * <br><br>
+     * <p>
      * After this Future will successfully complete, the result will be passed to the specified transformer.
      * The output of the transformer will be the input for the new Future.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future
      * will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
      * <p>
@@ -671,13 +671,13 @@ public class Future<T> {
     /**
      * Create a new Future that will asynchronously transform the value to a new Future
      * using the given asynchronous transformer.
-     * <br><br>
+     * <p>
      * After this Future will successfully complete, the result will be passed to the specified transformer.
      * The output of the transformer will be the input for the new Future.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future
      * will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the transformer will be called
      * immediately, and a completed Future will be returned.
      *
@@ -728,11 +728,11 @@ public class Future<T> {
 
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <br><br>
+     * <p>
      * @param value the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
@@ -754,14 +754,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
-     * <br><br>
+     * <p>
      * When this Future completes with a value, the supplier will be called synchronously to get the value
      * to complete the new Future with.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <br><br>
+     * <p>
      * @param value the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
@@ -783,14 +783,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
-     * <br><br>
+     * <p>
      * When this Future completes with a value, the supplier will be called synchronously to get the value
      * to complete the new Future with.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <br><br>
+     * <p>
      * @param value the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
@@ -816,14 +816,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
-     * <br><br>
+     * <p>
      * When this Future completes with a value, the supplier will be called asynchronously to get the value
      * to complete the new Future with.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <br><br>
+     * <p>
      * @param value the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
@@ -843,14 +843,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
-     * <br><br>
+     * <p>
      * When this Future completes with a value, the supplier will be called asynchronously to get the value
      * to complete the new Future with.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <br><br>
+     * <p>
      * @param value the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
@@ -873,12 +873,12 @@ public class Future<T> {
     /**
      * Create a new Future that does not care about the completion value, it only checks for successful or
      * failed completion.
-     * <br><br>
+     * <p>
      * After this Future will successfully complete, a null be passed to the new Future.
-     * <br><br>
+     * <p>
      * If this Future completes with an exception, the new Future
      * will be completed with the same exception.
-     * <br><br>
+     * <p>
      * If the current Future is already completed successfully, a completed Future will be returned with the value of null.
      *
      * @return a new Future of Void type
@@ -920,9 +920,9 @@ public class Future<T> {
     /**
      * Create a new Future that does not care about the completion value, it only checks for successful or
      * failed completion.
-     * <br><br>
+     * <p>
      * The Future will be completed successfully in every case.
-     * <br><br>
+     * <p>
      * The Future will be completed with the value of <code>true</code> if the current Future completes successfully,
      * and with the value of <code>false</code> if the current Future fails with an exception.
      *
@@ -949,11 +949,11 @@ public class Future<T> {
 
     /**
      * Register a failure handler to be called when the Future completes with an error.
-     * <br><br>
+     * <p>
      * If the Future completes successfully, the specified <code>action</code> will not be called.
      * If you wish to handle successful completions as well,
      * use {@link #result(BiConsumer)} or {@link #then(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed unsuccessfully, the action will be called immediately with
      * the completion error. If the Future has completed with a result, the action will not be called.
      *
@@ -977,11 +977,11 @@ public class Future<T> {
 
     /**
      * Register a failure handler to be called when the Future completes with an error.
-     * <br><br>
+     * <p>
      * If the Future completes successfully, the specified <code>action</code> will not be called.
      * If you wish to handle successful completions as well,
      * use {@link #result(BiConsumer)} or {@link #then(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed unsuccessfully, the action will be called immediately with
      * the completion error. If the Future has completed with a result, the action will not be called.
      *
@@ -1016,11 +1016,11 @@ public class Future<T> {
 
     /**
      * Register a failure handler to be called when the Future completes with an error.
-     * <br><br>
+     * <p>
      * If the Future completes successfully, the specified <code>action</code> will not be called.
      * If you wish to handle successful completions as well,
      * use {@link #result(BiConsumer)} or {@link #then(Consumer)} methods.
-     * <br><br>
+     * <p>
      * If the Future is already completed unsuccessfully, the action will be called immediately with
      * the completion error. If the Future has completed with a result, the action will not be called.
      *
@@ -1044,14 +1044,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will transform the exception from the old Future to a value.
-     * <br><br>
+     * <p>
      * If this Future completes successfully, the new Future will be completed
      * with the same exact value.
-     * <br><br>
+     * <p>
      * If this Future fails with an exception, the transformer will be called to
      * try to transform the exception to a fallback value. Finally, the value will be the
      * completion value of the new Future.
-     * <br><br>
+     * <p>
      * If the transformer's result is a constant, consider using {@link #fallback(Object)} instead,
      * as it does not require allocating a Function.
      *
@@ -1099,14 +1099,14 @@ public class Future<T> {
 
     /**
      * Create a new Future that will complete with the fallback value if this Future fails.
-     * <br><br>
+     * <p>
      * If this Future completes successfully, the new Future will be completed
      * with the same exact value.
-     * <br><br>
+     * <p>
      * If this Future fails with an exception, the fallback value will be used to complete the new Future.
      * This can be used for error recovery, or to produce a fallback object,
      * that will be returned upon unsuccessful completion.
-     * <br><br>
+     * <p>
      * If the fallback object is not a constant, consider using {@link #fallback(Function)} instead,
      * to allow dynamic fallback object creation.
      *
@@ -1141,10 +1141,10 @@ public class Future<T> {
 
     /**
      * Create a new Future that will statically cast the value of the completion value to the specified class type.
-     * <br><br>
+     * <p>
      * If this Future completes successfully, the new Future will be completed
      * with the completion value cast to the specified type.
-     * <br><br>
+     * <p>
      * If this Future fails with an exception, the new Future will be failed with the same exception.
      *
      * @param type the type of the class to cast the completion value to
@@ -1191,12 +1191,12 @@ public class Future<T> {
 
     /**
      * Register a special handler, that listens to both successful and unsuccessful completions.
-     * <br><br>
+     * <p>
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
      * <br>
      * If the Future is completed with an exception, the result will be null, and the exception will be given.
-     * <br><br>
+     * <p>
      * If you wish to determine if the completion was successful, consider checking if the exception is
      * <code>null</code>, as the completion might be successful with a <code>null</code> result.
      * <pre>
@@ -1233,12 +1233,12 @@ public class Future<T> {
     /**
      * Register a special handler, that listens to both successful and unsuccessful completions.
      * Use the transformer to create a new Future using the completion value and error.
-     * <br><br>
+     * <p>
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
      * <br>
      * If the Future is completed with an exception, the result will be null, and the exception will be given.
-     * <br><br>
+     * <p>
      * If you wish to determine if the completion was successful, consider checking if the exception is
      * <code>null</code>, as the completion might be successful with a <code>null</code> result.
      * <pre>
@@ -1433,7 +1433,7 @@ public class Future<T> {
      * Create a new Future, that will be completed unsuccessfully using a {@link FutureTimeoutException}
      * if the specified time has elapsed without a response. If this Future completes before the
      * timeout has passed, the new Future will be completed with this Future's result value.
-     * <br><br>
+     * <p>
      * If this Future completes unsuccessfully, the new Future will be completed with the same exception.
      *
      * @param timeout the time to wait (in milliseconds) until a {@link FutureTimeoutException} is thrown.
@@ -1490,7 +1490,7 @@ public class Future<T> {
      * Create a new Future, that will be completed unsuccessfully using a {@link FutureTimeoutException}
      * if the specified time has elapsed without a response. If this Future completes before the
      * timeout has passed, the new Future will be completed with this Future's result value.
-     * <br><br>
+     * <p>
      * If this Future completes unsuccessfully, the new Future will be completed with the same exception.
      *
      * @param timeout the time to wait until a {@link FutureTimeoutException} is thrown.
@@ -1692,11 +1692,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is not a constant, consider using {@link #completeAsync(Supplier, Executor)} instead,
      * as it does allow dynamic object creation.
      *
@@ -1723,11 +1723,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1754,11 +1754,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1787,11 +1787,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is not a constant, consider using {@link #completeAsync(Supplier)} instead,
      * as it does allow dynamic object creation.
      *
@@ -1819,11 +1819,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1850,11 +1850,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread using the specified value.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1881,11 +1881,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1911,11 +1911,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1941,11 +1941,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
@@ -1971,11 +1971,11 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will be completed automatically on a different thread, after running the specified task.
-     * <br><br>
+     * <p>
      * Note that if the new Future is completed faster, than the current one is able to append any callbacks on it,
      * then some callbacks might be executed on the current thread.
      * Therefore, make sure to register the callbacks to this Future first.
-     * <br><br>
+     * <p>
      * If the result object is a constant, consider using {@link #completeAsync(Object, Executor)} instead,
      * as it does not require allocating a supplier.
      *
@@ -2004,7 +2004,7 @@ public class Future<T> {
     /**
      * Try to complete the Future successfully with the value given.
      * Call all the callbacks waiting on the completion of this Future.
-     * <br><br>
+     * <p>
      * If the supplier throws an exception, the Future will be completed with the exception.
      *
      * @param supplier the completion value supplier
@@ -2025,9 +2025,9 @@ public class Future<T> {
     /**
      * Try to complete the Future successfully by completing the specified action.
      * Call all the callbacks waiting on the completion of this Future.
-     * <br><br>
+     * <p>
      * If the action throws an exception, the Future will be completed with the exception.
-     * <br><br>
+     * <p>
      *
      * @param action the task to try to complete
      * @return a new Future
