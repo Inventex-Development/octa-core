@@ -1231,9 +1231,12 @@ public class Future<T> {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
-                // fail the future it was already failed or if the predicate did not pass
-                if (failed || !predicate.test(value))
+                // fail the future it was already failed
+                if (failed)
                     return failed(error);
+                // fail the future if the predicate did not pass
+                if (!predicate.test(value))
+                    return failed(new FutureExecutionException("Predicate failed for value `" + value + "`"));
                 return completed(value);
             }
             // create a future that will fail if the predicate fails the completion value
