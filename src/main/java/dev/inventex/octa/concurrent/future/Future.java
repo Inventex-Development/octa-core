@@ -490,6 +490,96 @@ public class Future<T> {
     }
 
     /**
+     * Create a new Future that will complete the specified task after this Future has been completed.
+     * <p>
+     * If the Future completes with an exception, the specified <code>action</code> will not be called.
+     * If you wish to handle exceptions as well,
+     * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
+     * <p>
+     * If the Future is already completed successfully, the action will be called immediately with
+     * the completion value. If the Future failed with an exception, the action will not be called.
+     * <p>
+     * The new Future will be completed after this Future completes and the specified task is completed.
+     *
+     * @param task the task to complete after this Future is completed
+     * @return a new Future
+     */
+    public @NotNull Future<T> thenComplete(@NotNull Runnable task) {
+        synchronized (lock) {
+            Future<T> future = new Future<>();
+
+            if (completed) {
+                if (failed)
+                    future.fail(error);
+                else {
+                    task.run();
+                    future.complete(value);
+                }
+            }
+
+            else {
+                completionHandlers.add(value -> {
+                    task.run();
+                    future.complete(value);
+                });
+                errorHandlers.add(future::fail);
+            }
+
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will complete the specified task after this Future has been completed.
+     * <p>
+     * If the Future completes with an exception, the specified <code>action</code> will not be called.
+     * If you wish to handle exceptions as well,
+     * use {@link #result(BiConsumer)} or {@link #except(Consumer)} methods.
+     * <p>
+     * If the Future is already completed successfully, the action will be called immediately with
+     * the completion value. If the Future failed with an exception, the action will not be called.
+     * <p>
+     * The new Future will be completed after this Future completes and the specified task is completed.
+     * <p>
+     * If the specified task throws an error, the new Future will be failed with the produced error.
+     *
+     * @param task the task to complete after this Future is completed
+     * @return a new Future
+     */
+    public @NotNull Future<T> thenTryComplete(@NotNull ThrowableRunnable<Throwable> task) {
+        synchronized (lock) {
+            Future<T> future = new Future<>();
+
+            if (completed) {
+                if (failed)
+                    future.fail(error);
+                else {
+                    try {
+                        task.run();
+                        future.complete(value);
+                    } catch (Throwable e) {
+                        future.fail(e);
+                    }
+                }
+            }
+
+            else {
+                completionHandlers.add(value -> {
+                    try {
+                        task.run();
+                        future.complete(value);
+                    } catch (Throwable e) {
+                        future.fail(e);
+                    }
+                });
+                errorHandlers.add(future::fail);
+            }
+
+            return future;
+        }
+    }
+
+    /**
      * Create a new Future that will transform the value to a new Future using the given transformer.
      * <p>
      * After this Future will successfully complete, the result will be passed to the specified transformer.
@@ -1551,7 +1641,7 @@ public class Future<T> {
      *           
      * @see #transformAsync(Function)
      */
-    public <U> Future<T> chain(Future<U> other) {
+    public <U> @NotNull Future<T> chain(@NotNull Future<U> other) {
         synchronized (lock) {
             Future<T> future = new Future<>();
 
