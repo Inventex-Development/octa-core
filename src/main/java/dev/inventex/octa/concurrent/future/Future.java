@@ -123,6 +123,7 @@ public class Future<T> {
      *
      * @throws FutureExecutionException the completion failed and there was no default value to return
      */
+    @CheckReturnValue
     public T get() throws FutureExecutionException {
         try {
             // wait for the future completion without specifying a timeout
@@ -149,6 +150,7 @@ public class Future<T> {
      * @return the completion value or a default value
      */
     @SneakyThrows
+    @CanIgnoreReturnValue
     public T await() {
         return get();
     }
@@ -171,6 +173,7 @@ public class Future<T> {
      * @throws FutureTimeoutException the timeout interval has exceeded
      * @throws FutureExecutionException the completion failed and there was no default value to return
      */
+    @CheckReturnValue
     public T get(long timeout) throws FutureTimeoutException, FutureExecutionException {
         // wait for the future completion with a specified timeout
         return blockForValue(timeout, false, null);
@@ -187,6 +190,7 @@ public class Future<T> {
      * @param defaultValue the default value which is returned on a completion failure
      * @return the completion value or a default value
      */
+    @CheckReturnValue
     public T getOrDefault(@Nullable T defaultValue) {
         try {
             // wait for the future completion with a specified default value
@@ -214,6 +218,7 @@ public class Future<T> {
      *
      * @throws FutureTimeoutException the timeout interval has exceeded
      */
+    @CheckReturnValue
     public T getOrDefault(long timeout, @Nullable T defaultValue) throws FutureTimeoutException {
         try {
             // wait for the future completion with a specified timeout and default value
@@ -250,6 +255,7 @@ public class Future<T> {
      * @see #getOrDefault(Object)
      * @see #getOrDefault(long, Object)
      */
+    @CheckReturnValue
     private synchronized T blockForValue(
         long timeout, boolean hasDefault, @Nullable T defaultValue
     ) throws FutureTimeoutException, FutureExecutionException {
@@ -303,6 +309,7 @@ public class Future<T> {
      * @param defaultValue default value to return if the Future isn't completed
      * @return the completion value or the default value
      */
+    @CheckReturnValue
     public T getNow(@Nullable T defaultValue) {
         return completed ? value : defaultValue;
     }
@@ -410,6 +417,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> then(@NotNull Consumer<T> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -438,6 +446,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> tryThen(@NotNull ThrowableConsumer<T, Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -477,6 +486,7 @@ public class Future<T> {
      * @param action the successful completion callback
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> thenAsync(@NotNull Consumer<T> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -507,6 +517,7 @@ public class Future<T> {
      * @param task the task to complete after this Future is completed
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> thenComplete(@NotNull Runnable task) {
         synchronized (lock) {
             Future<T> future = new Future<>();
@@ -551,6 +562,7 @@ public class Future<T> {
      * @param task the task to complete after this Future is completed
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> thenTryComplete(@NotNull ThrowableRunnable<Throwable> task) {
         synchronized (lock) {
             Future<T> future = new Future<>();
@@ -604,6 +616,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> transform(@NotNull Function<T, U> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -661,6 +674,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> tryTransform(@NotNull ThrowableFunction<T, U, Throwable> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -725,6 +739,7 @@ public class Future<T> {
      * 
      * @see #chain(Future) 
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> transformAsync(@NotNull Function<T, Future<U>> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -783,6 +798,7 @@ public class Future<T> {
      * @param <U> the new Future type
      * @return a new Future of type U
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> tryTransformAsync(@NotNull ThrowableFunction<T, Future<U>, Throwable> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -835,6 +851,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> to(@Nullable U value) {
         synchronized (lock) {
             if (completed) {
@@ -876,6 +893,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> to(@NotNull Supplier<@Nullable U> supplier) {
         synchronized (lock) {
             if (completed) {
@@ -913,6 +931,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> tryTo(@NotNull ThrowableSupplier<U, Throwable> supplier) {
         synchronized (lock) {
             if (completed) {
@@ -958,6 +977,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> toAsync(@NotNull Supplier<U> supplier) {
         synchronized (lock) {
             if (completed) {
@@ -1002,6 +1022,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> tryToAsync(@NotNull ThrowableSupplier<U, Throwable> supplier) {
         synchronized (lock) {
             if (completed) {
@@ -1047,6 +1068,7 @@ public class Future<T> {
      *
      * @return a new Future of Void type
      */
+    @CheckReturnValue
     public @NotNull Future<Void> callback() {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1090,6 +1112,7 @@ public class Future<T> {
      *
      * @return a new Future of Boolean type
      */
+    @CheckReturnValue
     public @NotNull Future<Boolean> status() {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1122,6 +1145,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> except(@NotNull Consumer<Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -1150,6 +1174,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> tryExcept(@NotNull ThrowableConsumer<Throwable, Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -1189,6 +1214,7 @@ public class Future<T> {
      * @param action the failed completion handler
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> exceptAsync(@NotNull Consumer<Throwable> action) {
         synchronized (lock) {
             // register the action if the Future hasn't been completed yet
@@ -1220,6 +1246,7 @@ public class Future<T> {
      * @param transformer the function that transforms the error to T
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> fallback(@NotNull Function<Throwable, T> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1275,6 +1302,7 @@ public class Future<T> {
      * @param fallbackValue the value used if an exception occurs
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> fallback(@Nullable T fallbackValue) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1313,6 +1341,7 @@ public class Future<T> {
      * @return a new Future of the type U
      * @param <U> the type of the class to cast to
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> cast(@NotNull Class<U> type) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1376,6 +1405,7 @@ public class Future<T> {
      * @param action the completion value and error handler
      * @return this Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> result(@NotNull BiConsumer<T, Throwable> action) {
         synchronized (lock) {
             // call the action if the Future is already completed
@@ -1419,6 +1449,7 @@ public class Future<T> {
      * @param transformer the Future value transformer
      * @return a new Future of type U
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<U> result(@NotNull BiFunction<T, Throwable, U> transformer) {
         synchronized (lock) {
             // check if the Future is already completed
@@ -1466,6 +1497,7 @@ public class Future<T> {
      * @param predicate the function to test the completion value
      * @return a new future that will fail if the predicate fails
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> filter(Predicate<T> predicate) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1509,6 +1541,7 @@ public class Future<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> failIf(Function<T, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1555,6 +1588,7 @@ public class Future<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> failIf(BiFunction<T, Throwable, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1601,6 +1635,7 @@ public class Future<T> {
      * @param timeout the time to wait (in milliseconds) until a {@link FutureTimeoutException} is thrown.
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> timeout(long timeout) {
         synchronized (lock) {
             // create a new Future to send the timeout result to
@@ -1659,6 +1694,7 @@ public class Future<T> {
      * @param unit the type of the timeout (milliseconds, seconds, etc.)
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> timeout(long timeout, @NotNull TimeUnit unit) {
         return timeout(TimeUnit.MILLISECONDS.convert(timeout, unit));
     }
@@ -1667,6 +1703,7 @@ public class Future<T> {
      * Create a new Future which acts the same way this Future does.
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public @NotNull Future<T> mock() {
         synchronized (lock) {
             // create a new Future
@@ -1716,6 +1753,7 @@ public class Future<T> {
      *           
      * @see #transformAsync(Function)
      */
+    @CanIgnoreReturnValue
     public <U> @NotNull Future<T> chain(@NotNull Future<U> other) {
         synchronized (lock) {
             Future<T> future = new Future<>();
@@ -1791,6 +1829,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
+    @CheckReturnValue
     public static <T> @NotNull Future<T> completed(@Nullable T value) {
         // create a new empty Future
         Future<T> future = new Future<>();
@@ -1808,6 +1847,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
+    @CheckReturnValue
     public static <T> @NotNull Future<T> completed() {
         // create a new empty Future
         Future<T> future = new Future<>();
@@ -1825,6 +1865,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      * @return a new, completed Future
      */
+    @CheckReturnValue
     public static <T> @NotNull Future<T> completed(@NotNull Supplier<T> value) {
         // create a new empty Future
         Future<T> future = new Future<>();
@@ -1843,6 +1884,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      * @return a new, failed Future
      */
+    @CheckReturnValue
     public static <T> @NotNull Future<T> failed(@NotNull Throwable error) {
         // create a new empty Future
         Future<T> future = new Future<>();
@@ -1870,6 +1912,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
@@ -1901,6 +1944,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result, @NotNull Executor executor) {
         // create an empty future
         Future<T> future = new Future<>();
@@ -1931,6 +1975,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> tryCompleteAsync(
         @NotNull ThrowableSupplier<T, Throwable> result, @NotNull Executor executor
     ) {
@@ -1963,6 +2008,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> completeAsync(@Nullable T result) {
         // create an empty future
         Future<T> future = new Future<>();
@@ -1994,6 +2040,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> completeAsync(@NotNull Supplier<T> result) {
         // create an empty future
         Future<T> future = new Future<>();
@@ -2024,6 +2071,7 @@ public class Future<T> {
      * @param <T> the type of the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> tryCompleteAsync(@NotNull ThrowableSupplier<T, Throwable> result) {
         // create an empty future
         Future<T> future = new Future<>();
@@ -2054,6 +2102,7 @@ public class Future<T> {
      * @param task the task to run to complete the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task) {
         // create an empty future
         Future<Void> future = new Future<>();
@@ -2083,6 +2132,7 @@ public class Future<T> {
      * @param task the task to run to complete the future
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static @NotNull Future<Void> tryCompleteAsync(@NotNull ThrowableRunnable<Throwable> task) {
         // create an empty future
         Future<Void> future = new Future<>();
@@ -2114,6 +2164,7 @@ public class Future<T> {
      * @param executor the executor used to complete the Future on
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static @NotNull Future<Void> completeAsync(@NotNull Runnable task, @NotNull Executor executor) {
         // create an empty future
         Future<Void> future = new Future<>();
@@ -2143,6 +2194,7 @@ public class Future<T> {
      * @param executor the executor used to complete the Future on
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static @NotNull Future<Void> completeAsync(
         @NotNull ThrowableRunnable<Throwable> task, @NotNull Executor executor
     ) {
@@ -2169,6 +2221,7 @@ public class Future<T> {
      * @param supplier the completion value supplier
      * @return a new Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableSupplier<T, Throwable> supplier) {
         Future<T> future = new Future<>();
 
@@ -2192,6 +2245,7 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
+    @CanIgnoreReturnValue
     public static <T> @NotNull Future<T> tryComplete(@NotNull ThrowableRunnable<Throwable> action) {
         Future<T> future = new Future<>();
 
@@ -2211,6 +2265,7 @@ public class Future<T> {
      * @param stackTrace the stack trace of the method to be checked
      * @return the executor for the stack trace or the global executor
      */
+    @CheckReturnValue
     private static @NotNull Executor getExecutor(@NotNull StackTraceElement @NotNull [] stackTrace) {
         // validate that the class key and executor resolver functions are not set to null
         Validator.notNull(contextKeyMapper, "context key mapper");
