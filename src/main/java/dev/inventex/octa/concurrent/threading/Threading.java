@@ -2,7 +2,9 @@ package dev.inventex.octa.concurrent.threading;
 
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import lombok.SneakyThrows;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,6 +51,23 @@ public class Threading {
      */
     public static ExecutorService createWithId(String name) {
         return create(name.replace("$code", String.valueOf(threadId.getAndIncrement())));
+    }
+
+    /**
+     * Create a virtual executor service, or a thread pool if virtual threads are not supported by the JVM
+     * in the current environment.
+     *
+     * @param poolSize the size of the pool
+     * @return a virtual or pool executor service
+     */
+    @SneakyThrows
+    public static ExecutorService createVirtualOrPool(int poolSize) {
+        try {
+            Method method = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+            return (ExecutorService) method.invoke(null);
+        } catch (NoSuchMethodException e) {
+            return Executors.newFixedThreadPool(poolSize, FACTORY);
+        }
     }
 
     /**

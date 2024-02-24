@@ -3,6 +3,7 @@ package dev.inventex.octa.concurrent.future;
 import com.google.common.collect.MapMaker;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
+import dev.inventex.octa.concurrent.threading.Threading;
 import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
 import dev.inventex.octa.function.ThrowableRunnable;
@@ -40,7 +41,7 @@ public class Future<T> {
      * The global executor to be used for performing asynchronous tasks, where the executor is not specified explicitly.
      */
     @Setter
-    private static @NotNull Executor globalExecutor = Executors.newFixedThreadPool(
+    private static @NotNull Executor globalExecutor = Threading.createVirtualOrPool(
         Runtime.getRuntime().availableProcessors()
     );
 
@@ -1761,8 +1762,11 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // do not complete the other Future if this Future fails
-                if (failed) 
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     future.fail(error);
+                }
                 // try to complete the other Future if this Future was already completed
                 else other
                     .then(value -> future.complete(this.value))
