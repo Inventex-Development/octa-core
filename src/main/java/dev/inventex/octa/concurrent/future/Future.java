@@ -817,6 +817,88 @@ public class Future<T> {
     }
 
     /**
+     * Create a new Future that will be completed with the value of the specified supplier, if this Future completes.
+     * <p>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <p>
+     * If the current Future is already completed successfully, the transformer will be called
+     * immediately, and a completed Future will be returned.
+     *
+     * @param transformer the supplier to get the completion value from
+     * @return a new Future
+     * @param <U> the type of the supplier return value
+     */
+    public <U> @NotNull Future<U> transformTo(@NotNull Supplier<U> transformer) {
+        synchronized (lock) {
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
+                    return failed(error);
+                }
+
+                else
+                    return completed(transformer.get());
+            }
+
+            Future<U> future = new Future<>();
+
+            completionHandlers.add(value -> future.complete(transformer.get()));
+            errorHandlers.add(future::fail);
+
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will be completed with the value of the specified supplier, if this Future completes.
+     * <p>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <p>
+     * If the current Future is already completed successfully, the transformer will be called
+     * immediately, and a completed Future will be returned.
+     * <p>
+     * If the transformer fails to supply a value, the new Future will be failed with the produced error.
+     *
+     * @param transformer the supplier to get the completion value from
+     * @return a new Future
+     * @param <U> the type of the supplier return value
+     */
+    public <U> @NotNull Future<U> tryTransformTo(@NotNull ThrowableSupplier<U, Throwable> transformer) {
+        synchronized (lock) {
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
+                    return failed(error);
+                }
+
+                try {
+                    return completed(transformer.get());
+                } catch (Throwable error) {
+                    return failed(error);
+                }
+            }
+
+            Future<U> future = new Future<>();
+
+            completionHandlers.add(value -> {
+                try {
+                    future.complete(transformer.get());
+                } catch (Throwable error) {
+                    future.fail(error);
+                }
+            });
+
+            return future;
+        }
+    }
+
+    /**
      * Create a new Future that will be completed with the given value, when this Future completes.
      * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
@@ -827,7 +909,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> to(U value) {
+    public <U> @NotNull Future<U> to(@Nullable U value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -856,7 +938,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> to(Supplier<U> value) {
+    public <U> @NotNull Future<U> to(@NotNull Supplier<@Nullable U> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -885,7 +967,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> tryTo(ThrowableSupplier<U, Throwable> value) {
+    public <U> @NotNull Future<U> tryTo(@NotNull ThrowableSupplier<U, Throwable> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -918,7 +1000,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> toAsync(Supplier<U> value) {
+    public <U> @NotNull Future<U> toAsync(@NotNull Supplier<U> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
@@ -945,7 +1027,7 @@ public class Future<T> {
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> tryToAsync(ThrowableSupplier<U, Throwable> value) {
+    public <U> @NotNull Future<U> tryToAsync(@NotNull ThrowableSupplier<U, Throwable> value) {
         // create a new Future that will supply the specified value
         Future<U> future = new Future<>();
 
