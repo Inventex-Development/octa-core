@@ -1,6 +1,7 @@
 package dev.inventex.octa.concurrent.future;
 
 import com.google.common.collect.MapMaker;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import dev.inventex.octa.function.ThrowableConsumer;
 import dev.inventex.octa.function.ThrowableFunction;
@@ -316,6 +317,7 @@ public class Future<T> {
      * @return <code>true</code> if the Future was completed with the value,
      * <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     public boolean complete(@Nullable T value) {
         // check if the future is already completed
         if (completed)
@@ -360,6 +362,7 @@ public class Future<T> {
      * @param error the error occurred whilst completing
      * @return <code>true</code> if the Future was completed with an error, <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     public boolean fail(@NotNull Throwable error) {
         // check if the future is already completed
         if (completed)
@@ -509,9 +512,11 @@ public class Future<T> {
             Future<T> future = new Future<>();
 
             if (completed) {
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     future.fail(error);
-                else {
+                } else {
                     task.run();
                     future.complete(value);
                 }
@@ -551,8 +556,11 @@ public class Future<T> {
             Future<T> future = new Future<>();
 
             if (completed) {
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     future.fail(error);
+                }
                 else {
                     try {
                         task.run();
@@ -817,19 +825,17 @@ public class Future<T> {
     }
 
     /**
-     * Create a new Future that will be completed with the value of the specified supplier, if this Future completes.
+     * Create a new Future that will be completed with the given value, when this Future completes.
      * <p>
-     * If this Future completes with an exception, the new Future
-     * will be completed with the same exception.
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
      * <p>
-     * If the current Future is already completed successfully, the transformer will be called
-     * immediately, and a completed Future will be returned.
-     *
-     * @param transformer the supplier to get the completion value from
-     * @return a new Future
-     * @param <U> the type of the supplier return value
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <p>
+     * @param value the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> transformTo(@NotNull Supplier<U> transformer) {
+    public <U> @NotNull Future<U> to(@Nullable U value) {
         synchronized (lock) {
             if (completed) {
                 // check if the completion was unsuccessful
@@ -840,12 +846,16 @@ public class Future<T> {
                 }
 
                 else
-                    return completed(transformer.get());
+                    return completed(value);
             }
 
+            // create a new Future that will supply the specified value
             Future<U> future = new Future<>();
 
-            completionHandlers.add(value -> future.complete(transformer.get()));
+            // supply the value when this Future completes
+            completionHandlers.add(ignored -> future.complete(value));
+
+            // proxy the error to the new Future
             errorHandlers.add(future::fail);
 
             return future;
@@ -853,21 +863,57 @@ public class Future<T> {
     }
 
     /**
-     * Create a new Future that will be completed with the value of the specified supplier, if this Future completes.
+     * Create a new Future that will be completed with the given value, when this Future completes.
      * <p>
-     * If this Future completes with an exception, the new Future
-     * will be completed with the same exception.
+     * When this Future completes with a value, the supplier will be called synchronously to get the value
+     * to complete the new Future with.
      * <p>
-     * If the current Future is already completed successfully, the transformer will be called
-     * immediately, and a completed Future will be returned.
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
      * <p>
-     * If the transformer fails to supply a value, the new Future will be failed with the produced error.
-     *
-     * @param transformer the supplier to get the completion value from
-     * @return a new Future
-     * @param <U> the type of the supplier return value
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <p>
+     * @param supplier the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> tryTransformTo(@NotNull ThrowableSupplier<U, Throwable> transformer) {
+    public <U> @NotNull Future<U> to(@NotNull Supplier<@Nullable U> supplier) {
+        synchronized (lock) {
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
+                    return failed(error);
+                }
+
+                else
+                    return completed(supplier.get());
+            }
+
+            Future<U> future = new Future<>();
+
+            completionHandlers.add(value -> future.complete(supplier.get()));
+            errorHandlers.add(future::fail);
+
+            return future;
+        }
+    }
+
+    /**
+     * Create a new Future that will be completed with the given value, when this Future completes.
+     * <p>
+     * When this Future completes with a value, the supplier will be called synchronously to get the value
+     * to complete the new Future with.
+     * <p>
+     * If this Future completes with an exception, the new Future will be completed with the same exception.
+     * <p>
+     * If the current Future is already completed successfully, the new Future will be completed immediately.
+     * <p>
+     * @param supplier the value to complete the new Future with
+     * @return a new Future of type U
+     * @param <U> the new Future type
+     */
+    public <U> @NotNull Future<U> tryTo(@NotNull ThrowableSupplier<U, Throwable> supplier) {
         synchronized (lock) {
             if (completed) {
                 // check if the completion was unsuccessful
@@ -878,7 +924,7 @@ public class Future<T> {
                 }
 
                 try {
-                    return completed(transformer.get());
+                    return completed(supplier.get());
                 } catch (Throwable error) {
                     return failed(error);
                 }
@@ -888,7 +934,7 @@ public class Future<T> {
 
             completionHandlers.add(value -> {
                 try {
-                    future.complete(transformer.get());
+                    future.complete(supplier.get());
                 } catch (Throwable error) {
                     future.fail(error);
                 }
@@ -901,89 +947,45 @@ public class Future<T> {
     /**
      * Create a new Future that will be completed with the given value, when this Future completes.
      * <p>
-     * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <p>
-     * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <p>
-     * @param value the value to complete the new Future with
-     * @return a new Future of type U
-     * @param <U> the new Future type
-     */
-    public <U> @NotNull Future<U> to(@Nullable U value) {
-        // create a new Future that will supply the specified value
-        Future<U> future = new Future<>();
-
-        // supply the value when this Future completes
-        completionHandlers.add(ignored -> {
-            future.complete(value);
-        });
-
-        // proxy the error to the new Future
-        errorHandlers.add(future::fail);
-
-        return future;
-    }
-
-    /**
-     * Create a new Future that will be completed with the given value, when this Future completes.
-     * <p>
-     * When this Future completes with a value, the supplier will be called synchronously to get the value
+     * When this Future completes with a value, the supplier will be called asynchronously to get the value
      * to complete the new Future with.
      * <p>
      * If this Future completes with an exception, the new Future will be completed with the same exception.
      * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
      * <p>
-     * @param value the value to complete the new Future with
+     * @param supplier the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> to(@NotNull Supplier<@Nullable U> value) {
-        // create a new Future that will supply the specified value
-        Future<U> future = new Future<>();
+    public <U> @NotNull Future<U> toAsync(@NotNull Supplier<U> supplier) {
+        synchronized (lock) {
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
+                    return failed(error);
+                }
 
-        // supply the value when this Future completes
-        completionHandlers.add(ignored -> {
-            future.complete(value.get());
-        });
-
-        // proxy the error to the new Future
-        errorHandlers.add(future::fail);
-
-        return future;
-    }
-
-    /**
-     * Create a new Future that will be completed with the given value, when this Future completes.
-     * <p>
-     * When this Future completes with a value, the supplier will be called synchronously to get the value
-     * to complete the new Future with.
-     * <p>
-     * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <p>
-     * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <p>
-     * @param value the value to complete the new Future with
-     * @return a new Future of type U
-     * @param <U> the new Future type
-     */
-    public <U> @NotNull Future<U> tryTo(@NotNull ThrowableSupplier<U, Throwable> value) {
-        // create a new Future that will supply the specified value
-        Future<U> future = new Future<>();
-
-        // try to supply the value when this Future completes
-        completionHandlers.add(ignored -> {
-            try {
-                future.complete(value.get());
-            } catch (Throwable throwable) {
-                future.fail(throwable);
+                try {
+                    return completed(supplier.get());
+                } catch (Throwable error) {
+                    return failed(error);
+                }
             }
-        });
 
-        // proxy the error to the new Future
-        errorHandlers.add(future::fail);
+            // create a new Future that will supply the specified value
+            Future<U> future = new Future<>();
 
-        return future;
+            // supply the value when this Future completes
+            completionHandlers.add(ignored -> Future.completeAsync(supplier).then(future::complete));
+
+            // proxy the error to the new Future
+            errorHandlers.add(future::fail);
+
+            return future;
+        }
     }
 
     /**
@@ -996,50 +998,40 @@ public class Future<T> {
      * <p>
      * If the current Future is already completed successfully, the new Future will be completed immediately.
      * <p>
-     * @param value the value to complete the new Future with
+     * @param supplier the value to complete the new Future with
      * @return a new Future of type U
      * @param <U> the new Future type
      */
-    public <U> @NotNull Future<U> toAsync(@NotNull Supplier<U> value) {
-        // create a new Future that will supply the specified value
-        Future<U> future = new Future<>();
+    public <U> @NotNull Future<U> tryToAsync(@NotNull ThrowableSupplier<U, Throwable> supplier) {
+        synchronized (lock) {
+            if (completed) {
+                // check if the completion was unsuccessful
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
+                    return failed(error);
+                }
 
-        // supply the value when this Future completes
-        completionHandlers.add(ignored -> Future.completeAsync(value).then(future::complete));
+                try {
+                    return completed(supplier.get());
+                } catch (Throwable error) {
+                    return failed(error);
+                }
+            }
 
-        // proxy the error to the new Future
-        errorHandlers.add(future::fail);
+            // create a new Future that will supply the specified value
+            Future<U> future = new Future<>();
 
-        return future;
-    }
+            // try to supply the value when this Future completes
+            completionHandlers.add(ignored -> Future.tryCompleteAsync(supplier)
+                .then(future::complete)
+                .except(future::fail));
 
-    /**
-     * Create a new Future that will be completed with the given value, when this Future completes.
-     * <p>
-     * When this Future completes with a value, the supplier will be called asynchronously to get the value
-     * to complete the new Future with.
-     * <p>
-     * If this Future completes with an exception, the new Future will be completed with the same exception.
-     * <p>
-     * If the current Future is already completed successfully, the new Future will be completed immediately.
-     * <p>
-     * @param value the value to complete the new Future with
-     * @return a new Future of type U
-     * @param <U> the new Future type
-     */
-    public <U> @NotNull Future<U> tryToAsync(@NotNull ThrowableSupplier<U, Throwable> value) {
-        // create a new Future that will supply the specified value
-        Future<U> future = new Future<>();
+            // proxy the error to the new Future
+            errorHandlers.add(future::fail);
 
-        // try to supply the value when this Future completes
-        completionHandlers.add(ignored -> Future.tryCompleteAsync(value)
-            .then(future::complete)
-            .except(future::fail));
-
-        // proxy the error to the new Future
-        errorHandlers.add(future::fail);
-
-        return future;
+            return future;
+        }
     }
 
     /**
@@ -1068,7 +1060,7 @@ public class Future<T> {
 
                 // try to transform the future value
                 try {
-                    return completed((Void) null);
+                    return completed();
                 } catch (Exception e) {
                     // unable to transform the Future, return a failed Future
                     return failed(e);
@@ -1079,9 +1071,7 @@ public class Future<T> {
             // that will try to transform the value once it is completed
             Future<Void> future = new Future<>();
             // register the Future completion transformer
-            completionHandlers.add(value -> {
-                future.complete(null);
-            });
+            completionHandlers.add(value -> future.complete(null));
 
             // register the error handler
             errorHandlers.add(future::fail);
@@ -1666,7 +1656,7 @@ public class Future<T> {
      * If this Future completes unsuccessfully, the new Future will be completed with the same exception.
      *
      * @param timeout the time to wait until a {@link FutureTimeoutException} is thrown.
-     * @param unit the type of the timeout (milliseconds, seconds, etc)
+     * @param unit the type of the timeout (milliseconds, seconds, etc.)
      * @return a new Future
      */
     public @NotNull Future<T> timeout(long timeout, @NotNull TimeUnit unit) {
@@ -1684,8 +1674,11 @@ public class Future<T> {
             // check if the Future is already completed
             if (completed) {
                 // check if the completion was failed
-                if (failed)
+                if (failed) {
+                    Throwable error = this.error;
+                    assert error != null;
                     future.fail(error);
+                }
                     // handle successful completion
                 else
                     future.complete(value);
@@ -1916,8 +1909,7 @@ public class Future<T> {
         executor.execute(() -> {
             try {
                 future.complete(result.get());
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception ignored) {
             }
         });
 
@@ -1981,8 +1973,7 @@ public class Future<T> {
             // complete the future
             try {
                 future.complete(result);
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception ignored) {
             }
         });
 
@@ -2012,8 +2003,7 @@ public class Future<T> {
             // complete the future
             try {
                 future.complete(result.get());
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception ignored) {
             }
         });
 
@@ -2073,8 +2063,7 @@ public class Future<T> {
             try {
                 task.run();
                 future.complete(null);
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception ignored) {
             }
         });
 
@@ -2133,8 +2122,7 @@ public class Future<T> {
             try {
                 task.run();
                 future.complete(null);
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception ignored) {
             }
         });
 
@@ -2165,8 +2153,7 @@ public class Future<T> {
             try {
                 task.run();
                 future.complete(null);
-            } catch (Throwable e) {
-                future.fail(e);
+            } catch (Throwable ignored) {
             }
         });
 
