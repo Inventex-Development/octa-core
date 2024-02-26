@@ -2268,29 +2268,6 @@ public class Future<T> {
     }
 
     /**
-     * Try to complete the Future successfully with the value given.
-     * Call all the callbacks waiting on the completion of this Future.
-     * <p>
-     * If the supplier throws an exception, the Future will be completed with the exception.
-     *
-     * @param supplier the completion value supplier
-     * @return a new Future
-     * @param <T> the type of the Future
-     */
-    @CheckReturnValue
-    public static <T> @NotNull Future<T> tryComplete(@NotNull Supplier<T> supplier) {
-        Future<T> future = new Future<>();
-
-        try {
-            future.complete(supplier.get());
-        } catch (Exception e) {
-            future.fail(e);
-        }
-
-        return future;
-    }
-
-    /**
      * Create a new Future, will be completed using the specified future completer.
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
