@@ -1,5 +1,6 @@
 package dev.inventex.octa.data.convertible;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,14 +9,16 @@ import java.util.function.Supplier;
 
 /**
  * Represents a value converter, that tries to convert the given raw data to a T object.
- * <br><br>
+ * <p>
  * This class also contains useful methods to add transformers and completion handlers.
  * <br>
  * Error recovery is also possible using {@link #fallback(Object)}, {@link #fallback(Supplier)} and {@link #fallback(Function)}.
  * <br>
  * The syntax encourages chaining, therefore less code is needed to handle certain tasks/events.
+ *
  * @param <T> the type of the object that will be converted
  * @param <U> the type of the returned value of the completed conversion
+ * 
  * @author AdvancedAntiSkid
  * @since 1.0
  */
@@ -23,35 +26,33 @@ public abstract class Convertible<T, U> {
     /**
      * The raw input data of the convertible that will be converted.
      */
-    @Nullable
-    protected final T data;
+    protected final @Nullable T data;
 
     /**
      * The value of the completion result. Initially <code>null</code>, it is set to the completion object
      * after the completion is finished (which might still be <code>null</code>).
      */
-    @Nullable
-    private U result;
+    private volatile @Nullable U result;
 
     /**
      * The error that occurred whilst executing and caused an convertible failure.
      * Initially <code>null</code>, after a failure, it is guaranteed to be non-null.
      */
-    @Nullable
-    private Throwable error;
+    private volatile @Nullable Throwable error;
 
     /**
      * Indicates whether the completion had been done (either successfully or unsuccessfully).
      */
-    private boolean completed;
+    private volatile boolean completed;
 
     /**
      * Indicates whether the completion was failed.
      */
-    private boolean failed;
+    private volatile boolean failed;
 
     /**
-     * Create a new, uncompleted convertible.
+     * Create a new, incomplete convertible.
+     * 
      * @param data raw convertible input to be converted
      */
     public Convertible(@Nullable T data) {
@@ -60,18 +61,17 @@ public abstract class Convertible<T, U> {
 
     /**
      * Try to convert the input value to the given T type.
+     * 
      * @return converted value
      * @throws Exception unable to convert
      */
-    @Nullable
-    protected abstract U convert() throws Exception;
+    protected abstract @Nullable U convert() throws Exception;
 
     /**
      * Try to convert the raw input data to the given T type.
-     * <br><br>
-     * If the an error occurs whilst completing, a {@link ConversionException} is thrown.
+     * <p>
+     * If  an error occurs whilst completing, a {@link ConversionException} is thrown.
      * The actual exception that made the completion fail can be obtained using {@link ConversionException#getCause()}.
-     * <br><br>
      *
      * @return the completion value or a default value
      * @throws ConversionException the completion failed and a default value was not specified
@@ -82,9 +82,9 @@ public abstract class Convertible<T, U> {
 
     /**
      * Try to convert the raw input data to the given T type.
-     * <br><br>
-     * If the an error occurs whilst completing, a the <code>defaultValue</code> is returned if present.
-     * <br><br>
+     * <p>
+     * If an error occurs whilst completing, a the <code>defaultValue</code> is returned if present.
+     *
      * @return the completion value or a default value
      */
     public U getOrDefault(@Nullable U defaultValue) {
@@ -97,11 +97,10 @@ public abstract class Convertible<T, U> {
 
     /**
      * Try to convert the raw input data to the given T type.
-     * <br><br>
-     * If the an error occurs whilst completing, a {@link ConversionException} is thrown,
+     * <p>
+     * If an error occurs whilst completing, a {@link ConversionException} is thrown,
      * or the <code>defaultValue</code> is returned if present.
      * The actual exception that made the completion fail can be obtained using {@link ConversionException#getCause()}.
-     * <br><br>
      *
      * @param hasDefault indicates whether a default value should be returned on a completion failure
      * @param defaultValue the default value which is returned on a completion failure
@@ -122,9 +121,11 @@ public abstract class Convertible<T, U> {
             // return a default value if it is given
             if (hasDefault)
                 return defaultValue;
+
             // no default value set, throw an error
             throw new ConversionException(error);
         }
+
         // the conversion is not done yet
         try {
             // try to convert the raw string to the required value
@@ -135,6 +136,7 @@ public abstract class Convertible<T, U> {
             // return a default value if it is given
             if (hasDefault)
                 return defaultValue;
+
             // no default value set, throw an error
             throw new ConversionException(error);
         }
@@ -142,23 +144,21 @@ public abstract class Convertible<T, U> {
 
     /**
      * Create a new convertible that use the fallback value as a result if the completion fails.
-     * <br><br>
+     * <p>
      * If this convertible completes successfully, the new convertible will be completed with the same exact value.
-     * <br><br>
+     * <p>
      * If this convertible fails with an exception, the fallback value will be used to complete the new convertible.
      * This can be used for error recovery, or to produce a fallback object,
      * that will be returned upon unsuccessful completion.
-     * <br><br>
+     * <p>
      * If the fallback object is not a constant, consider using {@link #fallback(Supplier)} instead,
      * to allow dynamic fallback object creation.
      * If you want to create a fallback value based on the error, use {@link #fallback(Function)} instead.
-     * <br><br>
      *
      * @param value the value used for completion if an exception occurs
      * @return a new convertible
      */
-    @NotNull
-    public Convertible<T, U> fallback(@Nullable U value) {
+    public @NotNull Convertible<T, U> fallback(@Nullable U value) {
         // check if the conversion is already completed
         if (completed) {
             // create a completed convertible with the default value
@@ -170,7 +170,9 @@ public abstract class Convertible<T, U> {
                 return completed(value);
             // convertible was completed, no need for the fallback value
             return completed(result);
+
         }
+
         // create a new convertible that will return the fallback value
         // if the conversion fails
         Convertible<T, U> handle = this;
@@ -192,23 +194,21 @@ public abstract class Convertible<T, U> {
 
     /**
      * Create a new convertible that use the fallback value as a result if the completion fails.
-     * <br><br>
+     * <p>
      * If this convertible completes successfully, the new convertible will be completed with the same exact value.
-     * <br><br>
+     * <p>
      * If this convertible fails with an exception, the fallback value will be used to complete the new convertible.
      * This can be used for error recovery, or to produce a fallback object,
      * that will be returned upon unsuccessful completion.
-     * <br><br>
+     * <p>
      * If the fallback object is a constant, consider using {@link #fallback(Object)} instead,
      * as it does not require allocating a Supplier.
      * If you want to create a fallback value based on the error, use {@link #fallback(Function)} instead.
-     * <br><br>
      *
      * @param supplier the value used for completion if an exception occurs
      * @return a new convertible
      */
-    @NotNull
-    public Convertible<T, U> fallback(@NotNull Supplier<U> supplier) {
+    public @NotNull Convertible<T, U> fallback(@NotNull Supplier<U> supplier) {
         // check if the conversion is already completed
         if (completed) {
             // create a completed convertible with the default value
@@ -218,6 +218,7 @@ public abstract class Convertible<T, U> {
             // convertible was completed, no need for the fallback value
             return this;
         }
+
         // create a new convertible that will return the fallback value
         // if the conversion fails
         Convertible<T, U> handle = this;
@@ -239,24 +240,22 @@ public abstract class Convertible<T, U> {
 
     /**
      * Create a new convertible that use the fallback value as a result if the completion fails.
-     * <br><br>
+     * <p>
      * If this convertible completes successfully, the new convertible will be completed with the same exact value.
-     * <br><br>
+     * <p>
      * If this convertible fails with an exception, the fallback value will be used to complete the new convertible.
      * This can be used for error recovery, or to produce a fallback object,
      * that will be returned upon unsuccessful completion.
-     * <br><br>
+     * <p>
      * If the fallback object is not a constant, consider using {@link #fallback(Supplier)} instead,
      * to allow dynamic fallback object creation.
      * If the fallback object is a constant, consider using {@link #fallback(Object)} instead,
      * as it does not require allocating a Supplier.
-     * <br><br>
      *
      * @param transformer the value used for completion if an exception occurs
      * @return a new convertible
      */
-    @NotNull
-    public Convertible<T, U> fallback(@NotNull Function<Throwable, U> transformer) {
+    public @NotNull Convertible<T, U> fallback(@NotNull Function<Throwable, U> transformer) {
         // check if the conversion is already completed
         if (completed) {
             // create a completed convertible with the default value
@@ -266,6 +265,7 @@ public abstract class Convertible<T, U> {
             // convertible was completed, no need for the fallback value
             return this;
         }
+
         // create a new convertible that will return the fallback value
         // if the conversion fails
         Convertible<T, U> handle = this;
@@ -287,24 +287,26 @@ public abstract class Convertible<T, U> {
 
     /**
      * Indicates whether the convertible conversion had been done (either successfully or unsuccessfully).
-     * <br><br>
+     * <p>
      * In order to determine if the conversion was successful, use {@link #isFailed()}.
-     * <br><br>
+     *
      * @return <code>true</code> if this convertible has been already completed, <code>false</code> otherwise
      * @see #isFailed()
      */
+    @CheckReturnValue
     public boolean isCompleted() {
         return completed;
     }
 
     /**
      * Indicates whether the convertible conversion was completed unsuccessfully.
-     * <br><br>
+     * <p>
      * If the convertible hasn't been completed yet, this method returns <code>false</code>.
-     * <br><br>
+     *
      * @return <code>true</code> if the conversion was unsuccessful, <code>false</code> otherwise
      * @see #isCompleted()
      */
+    @CheckReturnValue
     public boolean isFailed() {
         return failed;
     }
@@ -313,19 +315,23 @@ public abstract class Convertible<T, U> {
      * Indicates whether the convertible is empty. (Has a source value of null.)
      * @return <code>true</code> if the <code>data</code> is null, <code>false</code> otherwise.
      */
+    @CheckReturnValue
     public boolean isEmpty() {
         return data == null;
     }
 
     /**
      * Create a new convertible, that is initially is completed initially using the specified value.
+     *
      * @param value the conversion result
+     *
      * @param <T> the source type
      * @param <U> the result type
+     *
      * @return a new, completed convertible
+     *
      */
-    @NotNull
-    public static <T, U> Convertible<T, U> completed(@Nullable U value) {
+    public static <T, U> @NotNull Convertible<T, U> completed(@Nullable U value) {
         // create a new convertible
         Convertible<T, U> convertible = new Convertible<T, U>(null) {
             @Override
@@ -339,6 +345,7 @@ public abstract class Convertible<T, U> {
                 return false;
             }
         };
+
         // set the convertible state
         convertible.result = value;
         convertible.completed = true;
@@ -347,13 +354,15 @@ public abstract class Convertible<T, U> {
 
     /**
      * Create a new convertible, that is initially failed using the specified error.
+     *
      * @param error the conversion error
+     *
      * @param <T> the source type
      * @param <U> the result type
+     *
      * @return a new, failed convertible
      */
-    @NotNull
-    public static <T, U> Convertible<T, U> failed(@NotNull Throwable error) {
+    public static <T, U> @NotNull Convertible<T, U> failed(@NotNull Throwable error) {
         // create a new convertible
         Convertible<T, U> convertible = new Convertible<T, U>(null) {
             @Override
@@ -361,6 +370,7 @@ public abstract class Convertible<T, U> {
                 return null;
             }
         };
+
         // set the convertible state
         convertible.error = error;
         convertible.completed = true;
@@ -372,12 +382,13 @@ public abstract class Convertible<T, U> {
      * Create a new convertible of the <code>T</code> type, and convert it to <code>U</code>.
      * @param data the value to be converted
      * @param transformer the value converter
+     *
      * @param <T> the source type
      * @param <U> the result type
+     *
      * @return a new convertible
      */
-    @NotNull
-    public static <T, U> Convertible<T, U> of(@Nullable T data, @NotNull Function<T, U> transformer) {
+    public static <T, U> @NotNull Convertible<T, U> of(@Nullable T data, @NotNull Function<T, U> transformer) {
         return new Convertible<T, U>(data) {
             @Override
             protected U convert() {
@@ -388,12 +399,13 @@ public abstract class Convertible<T, U> {
 
     /**
      * Create a new, empty convertible.
+     *
      * @param <T> the source type
      * @param <U> the result type
+     *
      * @return a new, empty convertible
      */
-    @NotNull
-    public static <T, U> Convertible<T, U> empty() {
+    public static <T, U> @NotNull Convertible<T, U> empty() {
         Convertible<T, U> convertible = new Convertible<T, U>(null) {
             @Override
             protected U convert() {
