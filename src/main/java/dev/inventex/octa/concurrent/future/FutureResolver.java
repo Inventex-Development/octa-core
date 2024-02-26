@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <T> the type of the future value
  */
-public interface FutureCompleter<T> {
+public interface FutureResolver<T> {
     /**
      * Complete the Future successfully with the value given.
      * Call all the callbacks waiting on the completion of this Future.

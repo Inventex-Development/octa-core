@@ -2272,18 +2272,18 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      *
      * @param callback the callback to pass the Future completer to
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> completeCallback(
-        @NotNull Consumer<FutureCompleter<T>> callback
+    public static <T> @NotNull Future<T> resolve(
+        @NotNull Consumer<FutureResolver<T>> callback
     ) {
         Future<T> future = new Future<>();
 
-        FutureCompleter<T> completer = new FutureCompleter<T>() {
+        FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
             public boolean complete(@Nullable T result) {
                 return future.complete(result);
@@ -2304,7 +2304,7 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      * <p>
      * If the callback throws an exception, the Future will be completed with the exception.
      *
@@ -2312,12 +2312,12 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> tryCompleteCallback(
-        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback
+    public static <T> @NotNull Future<T> tryResolve(
+        @NotNull ThrowableConsumer<FutureResolver<T>, Throwable> callback
     ) {
         Future<T> future = new Future<>();
 
-        FutureCompleter<T> completer = new FutureCompleter<T>() {
+        FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
             public boolean complete(@Nullable T result) {
                 return future.complete(result);
@@ -2343,7 +2343,7 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      * <p>
      * If the callback throws an exception, the Future will be completed with the exception.
      * <p>
@@ -2354,12 +2354,12 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> completeCallbackAsync(
-        @NotNull Consumer<FutureCompleter<T>> callback, @NotNull Executor executor
+    public static <T> @NotNull Future<T> resolveAsync(
+            @NotNull Consumer<FutureResolver<T>> callback, @NotNull Executor executor
     ) {
         Future<T> future = new Future<>();
 
-        FutureCompleter<T> completer = new FutureCompleter<T>() {
+        FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
             public boolean complete(@Nullable T result) {
                 return future.complete(result);
@@ -2381,7 +2381,7 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      * <p>
      * If the callback throws an exception, the Future will be completed with the exception.
      *
@@ -2389,8 +2389,8 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> completeCallbackAsync(@NotNull Consumer<FutureCompleter<T>> callback) {
-        return completeCallbackAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
+    public static <T> @NotNull Future<T> resolveAsync(@NotNull Consumer<FutureResolver<T>> callback) {
+        return resolveAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
     }
 
     /**
@@ -2398,7 +2398,7 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      * <p>
      * If the callback throws an exception, the Future will be completed with the exception.
      * <p>
@@ -2409,12 +2409,12 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> tryCompleteCallbackAsync(
-        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback, @NotNull Executor executor
+    public static <T> @NotNull Future<T> tryResolveAsync(
+            @NotNull ThrowableConsumer<FutureResolver<T>, Throwable> callback, @NotNull Executor executor
     ) {
         Future<T> future = new Future<>();
 
-        FutureCompleter<T> completer = new FutureCompleter<T>() {
+        FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
             public boolean complete(@Nullable T result) {
                 return future.complete(result);
@@ -2442,7 +2442,7 @@ public class Future<T> {
      * <p>
      * This can be used to complete a Future from an external context, such as a callback.
      * <p>
-     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * The callback is called immediately with a new {@link FutureResolver} value.
      * <p>
      * If the callback throws an exception, the Future will be completed with the exception.
      *
@@ -2450,10 +2450,10 @@ public class Future<T> {
      * @return a new Future
      * @param <T> the type of the Future
      */
-    public static <T> @NotNull Future<T> tryCompleteCallbackAsync(
-        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback
+    public static <T> @NotNull Future<T> tryResolveAsync(
+        @NotNull ThrowableConsumer<FutureResolver<T>, Throwable> callback
     ) {
-        return tryCompleteCallbackAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
+        return tryResolveAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
     }
 
     /**
