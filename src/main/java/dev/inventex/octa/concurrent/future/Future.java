@@ -2285,12 +2285,12 @@ public class Future<T> {
 
         FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
-            public boolean complete(@Nullable T result) {
+            public boolean onComplete(@Nullable T result) {
                 return future.complete(result);
             }
 
             @Override
-            public boolean fail(@NotNull Throwable error) {
+            public boolean onFail(@NotNull Throwable error) {
                 return future.fail(error);
             }
         };
@@ -2319,12 +2319,12 @@ public class Future<T> {
 
         FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
-            public boolean complete(@Nullable T result) {
+            public boolean onComplete(@Nullable T result) {
                 return future.complete(result);
             }
 
             @Override
-            public boolean fail(@NotNull Throwable error) {
+            public boolean onFail(@NotNull Throwable error) {
                 return future.fail(error);
             }
         };
@@ -2361,12 +2361,12 @@ public class Future<T> {
 
         FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
-            public boolean complete(@Nullable T result) {
+            public boolean onComplete(@Nullable T result) {
                 return future.complete(result);
             }
 
             @Override
-            public boolean fail(@NotNull Throwable error) {
+            public boolean onFail(@NotNull Throwable error) {
                 return future.fail(error);
             }
         };
@@ -2416,12 +2416,12 @@ public class Future<T> {
 
         FutureResolver<T> completer = new FutureResolver<T>() {
             @Override
-            public boolean complete(@Nullable T result) {
+            public boolean onComplete(@Nullable T result) {
                 return future.complete(result);
             }
 
             @Override
-            public boolean fail(@NotNull Throwable error) {
+            public boolean onFail(@NotNull Throwable error) {
                 return future.fail(error);
             }
         };
