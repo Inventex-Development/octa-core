@@ -14,9 +14,9 @@ import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 
 /**
@@ -2455,6 +2455,45 @@ public class Future<T> {
     ) {
         return tryResolveAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
     }
+
+    /**
+     * Create a new Future, that will be completed when each of the specified futures are completed.
+     * <p>
+     * If any of the specified futures fail, the new Future will be failed with the exception.
+     * <p>
+     * The futures completion callbacks are executed parallel.
+     *
+     * @param futures the futures to wait for
+     * @return a new Future
+     */
+    public static Future<Void> all(@NotNull Future<?>... futures) {
+        Future<Void> future = new Future<>();
+        AtomicInteger counter = new AtomicInteger(futures.length);
+
+        for (Future<?> f : futures) {
+            f.then(val -> {
+                if (counter.decrementAndGet() == 0)
+                    future.complete(null);
+            }).except(future::fail);
+        }
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, that will be completed when each of the specified futures are completed.
+     * <p>
+     * If any of the specified futures fail, the new Future will be failed with the exception.
+     * <p>
+     * The futures completion callbacks are executed parallel.
+     *
+     * @param futures the futures to wait for
+     * @return a new Future
+     */
+    public static Future<Void> all(@NotNull Collection<Future<?>> futures) {
+        return all(futures.toArray(new Future[0]));
+    }
+
 
     /**
      * Resolve the executor for the specified stack trace.
