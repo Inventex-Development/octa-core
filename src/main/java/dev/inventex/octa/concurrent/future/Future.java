@@ -119,10 +119,12 @@ public class Future<T> {
      * The actual exception that made the future fail can be obtained using {@link FutureExecutionException#getCause()}.
      * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <p>
+     *
      * @return the completion value or a default value
      *
      * @throws FutureExecutionException the completion failed and there was no default value to return
+     *
+     * @see #await()
      */
     @CheckReturnValue
     public T get() throws FutureExecutionException {
@@ -147,8 +149,10 @@ public class Future<T> {
      * <p>
      * If the request has a timeout and exceeds the given time interval, a {@link FutureTimeoutException} is thrown.
      * If the timeout is 0, the method will block indefinitely.
-     * <p>
+     *
      * @return the completion value or a default value
+     *
+     * @see #get()
      */
     @SneakyThrows
     @CanIgnoreReturnValue
