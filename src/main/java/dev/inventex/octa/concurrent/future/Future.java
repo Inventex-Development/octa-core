@@ -2268,6 +2268,218 @@ public class Future<T> {
     }
 
     /**
+     * Try to complete the Future successfully with the value given.
+     * Call all the callbacks waiting on the completion of this Future.
+     * <p>
+     * If the supplier throws an exception, the Future will be completed with the exception.
+     *
+     * @param supplier the completion value supplier
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    @CheckReturnValue
+    public static <T> @NotNull Future<T> tryComplete(@NotNull Supplier<T> supplier) {
+        Future<T> future = new Future<>();
+
+        try {
+            future.complete(supplier.get());
+        } catch (Exception e) {
+            future.fail(e);
+        }
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, will be completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> completeCallback(
+        @NotNull Consumer<FutureCompleter<T>> callback
+    ) {
+        Future<T> future = new Future<>();
+
+        FutureCompleter<T> completer = new FutureCompleter<T>() {
+            @Override
+            public boolean complete(@Nullable T result) {
+                return future.complete(result);
+            }
+
+            @Override
+            public boolean fail(@NotNull Throwable error) {
+                return future.fail(error);
+            }
+        };
+        callback.accept(completer);
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, will be completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * <p>
+     * If the callback throws an exception, the Future will be completed with the exception.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> tryCompleteCallback(
+        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback
+    ) {
+        Future<T> future = new Future<>();
+
+        FutureCompleter<T> completer = new FutureCompleter<T>() {
+            @Override
+            public boolean complete(@Nullable T result) {
+                return future.complete(result);
+            }
+
+            @Override
+            public boolean fail(@NotNull Throwable error) {
+                return future.fail(error);
+            }
+        };
+
+        try {
+            callback.accept(completer);
+        } catch (Throwable e) {
+            future.fail(e);
+        }
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, will be asynchronously completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * <p>
+     * If the callback throws an exception, the Future will be completed with the exception.
+     * <p>
+     * The executor is used to run the callback on.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @param executor the executor used to complete the Future on
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> completeCallbackAsync(
+        @NotNull Consumer<FutureCompleter<T>> callback, @NotNull Executor executor
+    ) {
+        Future<T> future = new Future<>();
+
+        FutureCompleter<T> completer = new FutureCompleter<T>() {
+            @Override
+            public boolean complete(@Nullable T result) {
+                return future.complete(result);
+            }
+
+            @Override
+            public boolean fail(@NotNull Throwable error) {
+                return future.fail(error);
+            }
+        };
+
+        executor.execute(() -> callback.accept(completer));
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, will be asynchronously completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * <p>
+     * If the callback throws an exception, the Future will be completed with the exception.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> completeCallbackAsync(@NotNull Consumer<FutureCompleter<T>> callback) {
+        return completeCallbackAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
+    }
+
+    /**
+     * Create a new Future, will be asynchronously completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * <p>
+     * If the callback throws an exception, the Future will be completed with the exception.
+     * <p>
+     * The executor is used to run the callback on.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @param executor the executor used to complete the Future on
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> tryCompleteCallbackAsync(
+        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback, @NotNull Executor executor
+    ) {
+        Future<T> future = new Future<>();
+
+        FutureCompleter<T> completer = new FutureCompleter<T>() {
+            @Override
+            public boolean complete(@Nullable T result) {
+                return future.complete(result);
+            }
+
+            @Override
+            public boolean fail(@NotNull Throwable error) {
+                return future.fail(error);
+            }
+        };
+
+        executor.execute(() -> {
+            try {
+                callback.accept(completer);
+            } catch (Throwable e) {
+                future.fail(e);
+            }
+        });
+
+        return future;
+    }
+
+    /**
+     * Create a new Future, will be asynchronously completed using the specified future completer.
+     * <p>
+     * This can be used to complete a Future from an external context, such as a callback.
+     * <p>
+     * The callback is called immediately with a new {@link FutureCompleter} value.
+     * <p>
+     * If the callback throws an exception, the Future will be completed with the exception.
+     *
+     * @param callback the callback to pass the Future completer to
+     * @return a new Future
+     * @param <T> the type of the Future
+     */
+    public static <T> @NotNull Future<T> tryCompleteCallbackAsync(
+        @NotNull ThrowableConsumer<FutureCompleter<T>, Throwable> callback
+    ) {
+        return tryCompleteCallbackAsync(callback, getExecutor(Thread.currentThread().getStackTrace()));
+    }
+
+    /**
      * Resolve the executor for the specified stack trace.
      *
      * @param stackTrace the stack trace of the method to be checked
@@ -2280,7 +2492,7 @@ public class Future<T> {
         Validator.notNull(contextExecutorMapper, "context executor mapper");
 
         // retrieve the global executor if the stack trace may not contain the caller class
-        if (stackTrace.length < 3)
+        if (stackTrace.length <= 2)
             return globalExecutor;
 
         // resolve the class type of the method's caller
