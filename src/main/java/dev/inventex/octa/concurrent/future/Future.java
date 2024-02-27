@@ -26,17 +26,19 @@ import java.util.function.*;
  * <p>
  * This class also contains useful methods to attach callbacks for completion/failure events,
  * and to create new Future objects based on this instance.
- * <br>
+ * <p>
  * Error recovery is also possible using the {@link #fallback(Object)} and {@link #fallback(Function)} methods.
- * <br>
+ * <p>
  * The syntax encourages chaining, therefore less code is needed to handle certain tasks/events.
  *
  * @param <T> the type of the returned value of the completed Future
+ *
  * @author AdvancedAntiSkid
  * @author MrGazdag
+ *
  * @since 1.0
  */
-public class Future<T> {
+public class Future<T> implements Promise<T> {
     /**
      * The global executor to be used for performing asynchronous tasks, where the executor is not specified explicitly.
      */
@@ -1443,7 +1445,7 @@ public class Future<T> {
      * <p>
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
-     * <br>
+     * <p>
      * If the Future is completed with an exception, the result will be null, and the exception will be given.
      * <p>
      * If you wish to determine if the completion was successful, consider checking if the exception is
@@ -1486,7 +1488,7 @@ public class Future<T> {
      * <p>
      * After a successful completion, the specified action will be called with the result value,
      * and the exception will be <code>null</code>.
-     * <br>
+     * <p>
      * If the Future is completed with an exception, the result will be null, and the exception will be given.
      * <p>
      * If you wish to determine if the completion was successful, consider checking if the exception is
@@ -1618,7 +1620,7 @@ public class Future<T> {
      * Fail the future if the specified predicate outputs an error.
      * This is useful when trying to fail a future, if the completion value turned out
      * to be something else than expected.
-     * <br>
+     * <p>
      * If you would like to handle errors as well, use {@link #failIf(BiFunction)} instead.
      *
      * @param predicate the function that returns an error if the future should be failed
@@ -1665,7 +1667,7 @@ public class Future<T> {
      * Fail the future if the specified predicate outputs an error.
      * This is useful when trying to fail a future, if the completion value turned out
      * to be something else than expected.
-     * <br>
+     * <p>
      * If you would like to handle the completion value only, use {@link #failIf(Function)} instead.
      *
      * @param predicate the function that returns an error if the future should be failed
@@ -2487,7 +2489,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      */
     public static <T> @NotNull Future<T> tryResolveAsync(
-            @NotNull ThrowableConsumer<FutureResolver<T>, Throwable> callback, @NotNull Executor executor
+        @NotNull ThrowableConsumer<FutureResolver<T>, Throwable> callback, @NotNull Executor executor
     ) {
         Future<T> future = new Future<>();
 
@@ -2570,7 +2572,6 @@ public class Future<T> {
     public static Future<Void> all(@NotNull Collection<Future<?>> futures) {
         return all(futures.toArray(new Future[0]));
     }
-
 
     /**
      * Resolve the executor for the specified stack trace.
