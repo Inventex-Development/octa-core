@@ -1552,24 +1552,26 @@ public class Future<T> {
 
     /**
      * Create a new Future, that will fail if the predicate fails for a value of a completion.
+     *
      * @param predicate the function to test the completion value
+     * @param error the error to fail the future with if the predicate fails
      * @return a new future that will fail if the predicate fails
      */
     @CanIgnoreReturnValue
-    public @NotNull Future<T> filter(Predicate<T> predicate) {
+    public @NotNull Future<T> filter(@NotNull Predicate<T> predicate, @NotNull Supplier<Throwable> error) {
         synchronized (lock) {
             // check if the future is already completed
             if (completed) {
                 // fail the future it was already failed
                 if (failed) {
-                    Throwable error = this.error;
-                    assert error != null;
-                    return failed(error);
+                    Throwable completedError = this.error;
+                    assert completedError != null;
+                    return failed(completedError);
                 }
 
                 // fail the future if the predicate did not pass
                 if (!predicate.test(value))
-                    return failed(new FutureExecutionException("Predicate failed for value `" + value + "`"));
+                    return failed(error.get());
 
                 return completed(value);
             }
@@ -1581,7 +1583,7 @@ public class Future<T> {
                 if (predicate.test(value))
                     future.complete(value);
                 else
-                    future.fail(new FutureExecutionException("Predicate failed for value `" + value + "`"));
+                    future.fail(error.get());
             });
 
             errorHandlers.add(future::fail);
@@ -1590,7 +1592,30 @@ public class Future<T> {
         }
     }
 
-    /* Fail the future if the specified predicate outputs an error.
+    /**
+     * Create a new Future, that will fail if the predicate fails for a value of a completion.
+     *
+     * @param predicate the function to test the completion value
+     * @param error the error to fail the future with if the predicate fails
+     * @return a new future that will fail if the predicate fails
+     */
+    @CanIgnoreReturnValue
+    public @NotNull Future<T> filter(@NotNull Predicate<T> predicate, @NotNull Throwable error) {
+        return filter(predicate, () -> error);
+    }
+
+    /**
+     * Create a new Future, that will fail if the predicate fails for a value of a completion.
+     * @param predicate the function to test the completion value
+     * @return a new future that will fail if the predicate fails
+     */
+    @CanIgnoreReturnValue
+    public @NotNull Future<T> filter(Predicate<T> predicate) {
+        return filter(predicate, () -> new FutureExecutionException("Predicate failed for value `" + value + "`"));
+    }
+
+    /*
+     * Fail the future if the specified predicate outputs an error.
      * This is useful when trying to fail a future, if the completion value turned out
      * to be something else than expected.
      * <br>
@@ -2074,7 +2099,6 @@ public class Future<T> {
         // create an empty future
         Future<T> future = new Future<>();
 
-
         // use the executor of the caller class context to run the completion on
         getExecutor(Thread.currentThread().getStackTrace()).execute(() -> {
             // complete the future
@@ -2408,7 +2432,7 @@ public class Future<T> {
      * @param <T> the type of the Future
      */
     public static <T> @NotNull Future<T> resolveAsync(
-            @NotNull Consumer<FutureResolver<T>> callback, @NotNull Executor executor
+        @NotNull Consumer<FutureResolver<T>> callback, @NotNull Executor executor
     ) {
         Future<T> future = new Future<>();
 
