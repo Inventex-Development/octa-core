@@ -6,8 +6,6 @@ import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
-
 /**
  * A Future represents a callback, which can be completed or failed either synchronously or asynchronously.
  * A Future can be completed with the creation of A new I object, and can be failed by an exception
@@ -25,7 +23,7 @@ import java.util.function.Consumer;
  *
  * @since 1.0
  */
-public interface Promise<T> {
+public interface Promise<T> extends Callback<T> {
     /**
      * Block the current thread and wait for the Future completion to happen.
      * After the completion happened, the completion result T object is returned.
@@ -168,32 +166,4 @@ public interface Promise<T> {
      */
     @CheckReturnValue
     T getNow(@Nullable T defaultValue);
-
-    /**
-     * Register a completion handler to be called when the Future completes without an error.
-     * <p>
-     * If the Future completes with an exception, the specified <code>action</code> will not be called.
-     * <p>
-     * If the Future is already completed successfully, the action will be called immediately with
-     * the completion value. If the Future failed with an exception, the action will not be called.
-     *
-     * @param action the successful completion callback
-     * @return this Future
-     */
-    @CanIgnoreReturnValue
-    @NotNull Future<T> then(@NotNull Consumer<T> action);
-
-    /**
-     * Register a failure handler to be called when the Future completes with an error.
-     * <p>
-     * If the Future completes successfully, the specified <code>action</code> will not be called.
-     * <p>
-     * If the Future is already completed unsuccessfully, the action will be called immediately with
-     * the completion error. If the Future has completed with a result, the action will not be called.
-     *
-     * @param action the failed completion handler
-     * @return this Future
-     */
-    @CanIgnoreReturnValue
-    @NotNull Future<T> except(@NotNull Consumer<Throwable> action);
 }
