@@ -171,7 +171,7 @@ public class Future<T> {
      * If the timeout is 0, the method will block indefinitely.
      * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <p>
+     *
      * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown.
      * @return the completion value or a default value
      *
@@ -191,7 +191,7 @@ public class Future<T> {
      * If the future completes with an exception, the <code>defaultValue</code> is returned.
      * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <p>
+     *
      * @param defaultValue the default value which is returned on a completion failure
      * @return the completion value or a default value
      */
@@ -216,7 +216,7 @@ public class Future<T> {
      * If the timeout is 0, the method will block indefinitely.
      * <p>
      * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
-     * <p>
+     *
      * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown.
      * @param defaultValue the default value which is returned on a completion failure
      * @return the completion value or a default value
@@ -231,6 +231,59 @@ public class Future<T> {
         } catch (FutureExecutionException e) {
             // this should not happen
             throw new IllegalStateException("Execution exception should have been avoided", e);
+        }
+    }
+
+    /**
+     * Block the current thread and wait for the Future completion to happen.
+     * After the completion happened, the completion result T object is returned.
+     * <p>
+     * If the future completes with an exception, the specified <code>error</code> is thrown.
+     * <p>
+     * If the request has a timeout and exceeds the given time interval, the specified <code>error</code> is thrown.
+     * If the timeout is 0, the method will block indefinitely.
+     * <p>
+     * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
+     *
+     *
+     * @param timeout the maximum time interval to wait for the value, if this is exceeded, then a {@link FutureTimeoutException} is thrown
+     * @param error the error to throw if the future fails
+     * @return the completion value or the specified error
+     *
+     * @param <E> the type of the error to throw
+     *
+     * @throws E the error to throw if the future fails
+     */
+    @CheckReturnValue
+    public <E extends Throwable> T getOrThrow(long timeout, @NotNull E error) throws E {
+        try {
+            return blockForValue(timeout, false, null);
+        } catch (FutureExecutionException | FutureTimeoutException e) {
+            throw error;
+        }
+    }
+
+    /**
+     * Block the current thread and wait for the Future completion to happen.
+     * After the completion happened, the completion result T object is returned.
+     * <p>
+     * If the future completes with an exception, the specified <code>error</code> is thrown.
+     * <p>
+     * Note that if the future completes successfully with <code>null</code>, the method will also return <code>null</code>.
+     *
+     * @param error the error to throw if the future fails
+     * @return the completion value or the specified error
+     *
+     * @param <E> the type of the error to throw
+     *
+     * @throws E the error to throw if the future fails
+     */
+    @CheckReturnValue
+    public <E extends Throwable> T getOrThrow(@NotNull E error) throws E {
+        try {
+            return blockForValue(0, false, null);
+        } catch (FutureExecutionException | FutureTimeoutException e) {
+            throw error;
         }
     }
 
