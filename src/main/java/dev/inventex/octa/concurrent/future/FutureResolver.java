@@ -87,6 +87,7 @@ public abstract class FutureResolver<T> implements Resolver {
      *
      * @return <code>true</code> if the Future was completed with an error, <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     public boolean complete() {
         return complete(value);
     }
@@ -98,6 +99,7 @@ public abstract class FutureResolver<T> implements Resolver {
      *
      * @return <code>true</code> if the Future was completed with an error, <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     public boolean fail() {
         Throwable error = this.error;
         if (error == null)

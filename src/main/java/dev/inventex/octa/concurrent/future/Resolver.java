@@ -1,5 +1,7 @@
 package dev.inventex.octa.concurrent.future;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 /**
  * Represents an interface that can be used to complete a {@link Future} from an external context.
  * <p>
@@ -13,6 +15,7 @@ public interface Resolver {
      *
      * @return <code>true</code> if the Future was completed with an error, <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     boolean complete();
 
     /**
@@ -22,5 +25,6 @@ public interface Resolver {
      *
      * @return <code>true</code> if the Future was completed with an error, <code>false</code> otherwise
      */
+    @CanIgnoreReturnValue
     boolean fail();
 }

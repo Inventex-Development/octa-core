@@ -1559,7 +1559,7 @@ public class Future<T> implements Promise<T> {
      * @param error the error to fail the future with if the predicate fails
      * @return a new future that will fail if the predicate fails
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> filter(@NotNull Predicate<T> predicate, @NotNull Supplier<Throwable> error) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1601,7 +1601,7 @@ public class Future<T> implements Promise<T> {
      * @param error the error to fail the future with if the predicate fails
      * @return a new future that will fail if the predicate fails
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> filter(@NotNull Predicate<T> predicate, @NotNull Throwable error) {
         return filter(predicate, () -> error);
     }
@@ -1611,7 +1611,7 @@ public class Future<T> implements Promise<T> {
      * @param predicate the function to test the completion value
      * @return a new future that will fail if the predicate fails
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> filter(Predicate<T> predicate) {
         return filter(predicate, () -> new FutureExecutionException("Predicate failed for value `" + value + "`"));
     }
@@ -1626,7 +1626,7 @@ public class Future<T> implements Promise<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> failIf(Function<T, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1673,7 +1673,7 @@ public class Future<T> implements Promise<T> {
      * @param predicate the function that returns an error if the future should be failed
      * @return a new Future
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> failIf(BiFunction<T, Throwable, @Nullable Throwable> predicate) {
         synchronized (lock) {
             // check if the future is already completed
@@ -1720,7 +1720,7 @@ public class Future<T> implements Promise<T> {
      * @param timeout the time to wait (in milliseconds) until a {@link FutureTimeoutException} is thrown.
      * @return a new Future
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> timeout(long timeout) {
         synchronized (lock) {
             // create a new Future to send the timeout result to
@@ -1779,7 +1779,7 @@ public class Future<T> implements Promise<T> {
      * @param unit the type of the timeout (milliseconds, seconds, etc.)
      * @return a new Future
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> timeout(long timeout, @NotNull TimeUnit unit) {
         return timeout(TimeUnit.MILLISECONDS.convert(timeout, unit));
     }
@@ -1788,7 +1788,7 @@ public class Future<T> implements Promise<T> {
      * Create a new Future which acts the same way this Future does.
      * @return a new Future
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public @NotNull Future<T> mock() {
         synchronized (lock) {
             // create a new Future
@@ -1838,7 +1838,7 @@ public class Future<T> implements Promise<T> {
      *           
      * @see #transformAsync(Function)
      */
-    @CanIgnoreReturnValue
+    @CheckReturnValue
     public <U> @NotNull Future<T> chain(@NotNull Future<U> other) {
         synchronized (lock) {
             Future<T> future = new Future<>();
