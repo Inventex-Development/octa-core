@@ -1291,6 +1291,22 @@ public class Future<T> implements Promise<T> {
     }
 
     /**
+     * Register a failure handler to be called when the Future completes with an error.
+     * <p>
+     * If the Future completes successfully, nothing will happen.
+     * If you wish to handle successful completions as well,
+     * use {@link #result(BiConsumer)} or {@link #then(Consumer)} methods.
+     * <p>
+     * If the Future is already completed unsuccessfully, the produced error is printed to the console.
+     *
+     * @return this Future
+     */
+    @CanIgnoreReturnValue
+    public @NotNull Future<T> exceptPrint() {
+        return except(Throwable::printStackTrace);
+    }
+
+    /**
      * Create a new Future that will transform the exception from the old Future to a value.
      * <p>
      * If this Future completes successfully, the new Future will be completed
