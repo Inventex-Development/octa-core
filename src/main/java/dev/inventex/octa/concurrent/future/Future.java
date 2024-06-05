@@ -24,6 +24,11 @@ import java.util.function.*;
  * A Future can be completed with the creation of A new I object, and can be failed by an exception
  * happening whilst executing a Future task.
  * <p>
+ * A Future chain can be used as a more modern way of handling child- and parent execution contexts. This is useful
+ * when dealing with larger business logics. If any of the child parent fails, the error can be propagated to the
+ * root parent element. This way, handling internal errors is much easier, as the execution stops at that internal
+ * point, and the error is proxied back to the chain's entry point.
+ * <p>
  * This class also contains useful methods to attach callbacks for completion/failure events,
  * and to create new Future objects based on this instance.
  * <p>
@@ -1159,6 +1164,27 @@ public class Future<T> implements Promise<T> {
             errorHandlers.add(future::fail);
             return future;
         }
+    }
+
+    /**
+     * Create a new Future that does not care about the completion value, it only checks for successful or
+     * failed completion.
+     * <p>
+     * This is a special method, designed for some cases, when an external method implicitly returns a Future type,
+     * but the parent context does not care about the completion.
+     * <p>
+     * After this Future will successfully complete, a null be passed to the new Future.
+     * <p>
+     * If this Future completes with an exception, the new Future
+     * will be completed with the same exception.
+     * <p>
+     * If the current Future is already completed successfully, a completed Future will be returned with the value of null.
+     *
+     * @return a new Future of Void type
+     */
+    @CanIgnoreReturnValue
+    public Future<Void> discard() {
+        return callback();
     }
 
     /**
