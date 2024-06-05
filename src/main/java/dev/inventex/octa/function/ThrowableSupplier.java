@@ -1,5 +1,7 @@
 package dev.inventex.octa.function;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.function.Supplier;
 
 /**
@@ -27,7 +29,7 @@ public interface ThrowableSupplier<T, E extends Throwable> {
      *
      * @return the java supplier representation
      */
-    default Supplier<T> toSupplier() {
+    default @NotNull Supplier<T> toSupplier() {
         return () -> {
             try {
                 return get();
@@ -47,7 +49,7 @@ public interface ThrowableSupplier<T, E extends Throwable> {
      * 
      * @return the throwable supplier representation
      */
-    static <T, E extends Throwable> ThrowableSupplier<T, E> fomSupplier(Supplier<T> supplier) {
+    static <T, E extends Throwable> @NotNull ThrowableSupplier<T, E> fomSupplier(@NotNull Supplier<T> supplier) {
         return supplier::get;
     }
 }

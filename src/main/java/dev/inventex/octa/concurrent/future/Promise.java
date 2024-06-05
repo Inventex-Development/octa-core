@@ -161,6 +161,7 @@ public interface Promise<T> extends Callback<T> {
 
     /**
      * Get instantly the completion value or the default value if the Future hasn't been completed yet.
+     *
      * @param defaultValue default value to return if the Future isn't completed
      * @return the completion value or the default value
      */

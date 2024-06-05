@@ -37,7 +37,7 @@ public interface ThrowableConsumer<T, E extends Throwable> {
      *
      * @throws NullPointerException if {@code after} is null
      */
-    default @NotNull ThrowableConsumer<T, E> andThen(ThrowableConsumer<? super T, E> after) {
+    default @NotNull ThrowableConsumer<T, E> andThen(@NotNull ThrowableConsumer<? super T, E> after) {
         Objects.requireNonNull(after);
         return (T t) -> { accept(t); after.accept(t); };
     }
